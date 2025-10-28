@@ -5,6 +5,7 @@ using namespace s3d;
 
 void MapCamera::init(const Size& screenSize, const RectF& worldBounds, double scale) {
 	setViewport(screenSize, scale);
+	m_centerCont = m_center;
 	setWorldBounds(worldBounds);
 }
 
@@ -47,45 +48,56 @@ void MapCamera::updateFollowSmooth(const s3d::Vec2& targetCenter,
 								   const s3d::Vec2& targetVelocity,
 								   double dt)
 {
-	// 1) 屏幕像素死区 -> 世界单位
+	// 1) 死区大小（世界单位）
 	const double s = (m_scale > 0.0 ? m_scale : 1.0);
 	const s3d::Vec2 softHalfWorld = m_softDeadHalfScreenPx * (1.0 / s);
 
-	// ⭐ 让“死区边界”具有一点点滞后，避免恰好踩在边上来回跳
-	const double eps = 0.5 / s; // 半个世界像素
+	const double eps = 0.5 / s;
 	const double softX = s3d::Max(0.0, softHalfWorld.x - eps);
 	const double softY = s3d::Max(0.0, softHalfWorld.y - eps);
 
-	// 2) 只推动“越界的那一段”（excess），连续无跳变
-	s3d::Vec2 desired = m_center; // 先假设不动
+	// 2) 只推动越界的部分 —— 用连续中心 m_centerCont
+	s3d::Vec2 desired = m_centerCont;
 	{
-		const s3d::Vec2 delta = targetCenter - m_center;
-
-		// X 轴
+		const s3d::Vec2 delta = targetCenter - m_centerCont;
 		const double ax = s3d::Abs(delta.x);
-		if (ax > softX) {
-			const double excess = ax - softX;
-			desired.x = m_center.x + s3d::Sign(delta.x) * excess;
-		}
-
-		// Y 轴
 		const double ay = s3d::Abs(delta.y);
-		if (ay > softY) {
-			const double excess = ay - softY;
-			desired.y = m_center.y + s3d::Sign(delta.y) * excess;
-		}
+		if (ax > softX) desired.x = m_centerCont.x + s3d::Sign(delta.x) * (ax - softX);
+		if (ay > softY) desired.y = m_centerCont.y + s3d::Sign(delta.y) * (ay - softY);
 	}
 
-	// 3) 临界阻尼平滑
-	const double smoothTime = 0.20; // 如果还嫌跟得太紧可加到 0.22
-	m_center.x = SmoothDamp1(m_center.x, desired.x, m_smoothVX, smoothTime, dt);
-	m_center.y = SmoothDamp1(m_center.y, desired.y, m_smoothVY, smoothTime, dt);
+	// 3) 对连续中心做临界阻尼
+	const double smoothTime = 0.22;
+	m_centerCont.x = SmoothDamp1(m_centerCont.x, desired.x, m_smoothVX, smoothTime, dt);
+	m_centerCont.y = SmoothDamp1(m_centerCont.y, desired.y, m_smoothVY, smoothTime, dt);
 
-	// 4) 边界 & 像素对齐
-	applyClampAndSnap();
+	// 4) 对连续中心做“边界夹紧（不量化）”
+	//    注意：这里不要做像素对齐！
+	{
+		m_viewHalf = m_screenSize * (0.5 / m_scale);
+		const double viewW = m_viewHalf.x * 2.0;
+		const double viewH = m_viewHalf.y * 2.0;
 
-	m_cam.setCenter(m_center);
+		if (m_world.w <= viewW) m_centerCont.x = m_world.center().x;
+		if (m_world.h <= viewH) m_centerCont.y = m_world.center().y;
+
+		const double minX = m_world.leftX() + m_viewHalf.x;
+		const double maxX = m_world.rightX() - m_viewHalf.x;
+		const double minY = m_world.topY() + m_viewHalf.y;
+		const double maxY = m_world.bottomY() - m_viewHalf.y;
+
+		if (m_world.w > viewW) m_centerCont.x = s3d::Clamp(m_centerCont.x, minX, maxX);
+		if (m_world.h > viewH) m_centerCont.y = s3d::Clamp(m_centerCont.y, minY, maxY);
+	}
+
+	// 5) 从连续中心生成“对齐中心”供绘制（量化只发生在渲染输出）
+	const double snapS = (m_scale > 0.0 ? m_scale : 1.0);
+	m_center.x = std::round(m_centerCont.x * snapS) / snapS;
+	m_center.y = std::round(m_centerCont.y * snapS) / snapS;
+
+	// 6) 写回相机
 	m_cam.setScale(m_scale);
+	m_cam.setCenter(m_center);
 }
 
 void MapCamera::updateFollow(const Vec2& targetCenter) {

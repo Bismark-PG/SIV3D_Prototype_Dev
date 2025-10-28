@@ -53,6 +53,8 @@ private:
 	double     m_smoothVX{ 0.0 };
 	double     m_smoothVY{ 0.0 };
 
+	s3d::Vec2 m_centerCont{ 0, 0 }; 
+
 	void       applyClampAndSnap();
 
 
