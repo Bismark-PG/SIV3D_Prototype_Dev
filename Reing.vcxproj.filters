@@ -231,6 +231,12 @@
     <ClCompile Include="Battle_Manager.cpp">
       <Filter>Source Files\Battle</Filter>
     </ClCompile>
+    <ClCompile Include="MapDoor.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="MapInteractiveSystem.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="App\icon.ico">
@@ -952,6 +958,15 @@
     </ClInclude>
     <ClInclude Include="Battle_Manager.h">
       <Filter>Header Files\Battle</Filter>
+    </ClInclude>
+    <ClInclude Include="MapInteractiveObject.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="MapInteractiveSystem.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="MapDoor.h">
+      <Filter>Header Files\Map System</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

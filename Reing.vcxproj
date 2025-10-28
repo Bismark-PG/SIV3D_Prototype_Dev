@@ -126,10 +126,12 @@
     <ClCompile Include="MapBackground.cpp" />
     <ClCompile Include="MapCamera.cpp" />
     <ClCompile Include="MapCollider.cpp" />
+    <ClCompile Include="MapDoor.cpp" />
     <ClCompile Include="MapEnemy.cpp" />
     <ClCompile Include="MapEnemyNavi.cpp" />
     <ClCompile Include="MapEnemyRegister.cpp" />
     <ClCompile Include="MapEnemySystem.cpp" />
+    <ClCompile Include="MapInteractiveSystem.cpp" />
     <ClCompile Include="MapPlayer.cpp" />
     <ClCompile Include="MapScene.cpp" />
     <ClCompile Include="Player.cpp" />
@@ -354,10 +356,13 @@
     <ClInclude Include="MapBackground.h" />
     <ClInclude Include="MapCamera.h" />
     <ClInclude Include="MapCollider.h" />
+    <ClInclude Include="MapDoor.h" />
     <ClInclude Include="MapEnemy.h" />
     <ClInclude Include="MapEnemyNavi.h" />
     <ClInclude Include="MapEnemySystem.h" />
     <ClInclude Include="MapEnemyType.h" />
+    <ClInclude Include="MapInteractiveObject.h" />
+    <ClInclude Include="MapInteractiveSystem.h" />
     <ClInclude Include="MapPlayer.h" />
     <ClInclude Include="MapScene.h" />
     <ClInclude Include="Player.h" />

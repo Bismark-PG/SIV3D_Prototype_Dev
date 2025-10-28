@@ -63,6 +63,19 @@ void MapCollider::drawDebug() const {
 			s.poly.draw(ColorF{ 1,0,0,0.18 }); s.poly.drawFrame(1, Palette::Red);
 		}
 	}
+
+	// draw dynamic shapes in purple, so we can distinguish them from static
+	for (const auto& ds : m_dynamic) {
+		if (!ds.enabled) continue;
+		if (ds.type == DynType::Rect) {
+			ds.rect.draw(s3d::ColorF(0.7, 0.2, 1.0, 0.2));
+			ds.rect.drawFrame(1, 0, s3d::Palette::Purple);
+		}
+		else {
+			ds.poly.draw(s3d::ColorF(0.7, 0.2, 1.0, 0.18));
+			ds.poly.drawFrame(1, s3d::Palette::Purple);
+		}
+	}
 }
 
 bool MapCollider::intersectsAny(const s3d::RectF& r) const
@@ -80,6 +93,18 @@ bool MapCollider::intersectsAny(const s3d::RectF& r) const
 				return true;
 		}
 	}
+
+	// also test dynamic shapes
+	for (const auto& ds : m_dynamic) {
+		if (!ds.enabled) continue;
+		if (ds.type == DynType::Rect) {
+			if (r.intersects(ds.rect)) return true;
+		}
+		else {
+			if (ds.poly.intersects(r)) return true;
+		}
+	}
+
 	return false;
 }
 
@@ -93,4 +118,34 @@ double MapCollider::maxSafeT(const RectF& r, const Vec2& delta, int iters) const
 		if (!intersectsAny(test)) low = mid; else high = mid;
 	}
 	return low;
+}
+
+MapCollider::ShapeID MapCollider::addDynamicRect(const RectF& r, bool enabled) {
+	DynamicShape ds;
+	ds.id = m_nextDynId++;
+	ds.enabled = enabled;
+	ds.type = DynType::Rect;
+	ds.rect = r;
+	m_dynamic << ds;
+	return ds.id;
+}
+
+MapCollider::ShapeID MapCollider::addDynamicPoly(const Polygon& p, bool enabled) {
+	DynamicShape ds;
+	ds.id = m_nextDynId++;
+	ds.enabled = enabled;
+	ds.type = DynType::Poly;
+	ds.poly = p;
+	m_dynamic << ds;
+	return ds.id;
+}
+
+void MapCollider::setDynamicEnabled(ShapeID id, bool enabled) {
+	for (auto& ds : m_dynamic) {
+		if (ds.id == id) { ds.enabled = enabled; return; }
+	}
+}
+
+void MapCollider::removeDynamic(ShapeID id) {
+	m_dynamic.remove_if([&](const DynamicShape& ds) { return ds.id == id; });
 }

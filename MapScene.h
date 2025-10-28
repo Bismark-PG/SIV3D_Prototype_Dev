@@ -8,6 +8,7 @@
 #include "MapEnemySystem.h"
 #include "MapEnemyNavi.h"
 #include "Enemy.h" // For EnemyStats
+#include "MapInteractiveSystem.h"   
 
 // EN: Logic orchestrator: updates input/collision/camera and invokes background draw.
 // JP: ロジックのハブ：入力/衝突/カメラを更新し、背景描画を呼ぶ。
@@ -61,6 +62,9 @@ private:
 
 	// [Edit] save triggered enemy ID
 	MapEnemySystem::EnemyID m_triggeredEnemyID = MapEnemySystem::InvalidEnemyID;
+
+	//MapInteratives Manager
+	MapInteractiveSystem m_interactives;
 
 	void drawVisibilityMask() const; // 屏幕空间遮罩
 };

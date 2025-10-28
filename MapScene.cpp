@@ -10,6 +10,9 @@
 #include "stdafx.h"
 #include "MapScene.h"
 #include "MapEnemyType.h"
+#include "MapInteractiveSystem.h"
+#include "MapDoor.h"
+
 using namespace s3d;
 
 // include in MapEnemyRegister.cpp
@@ -59,6 +62,20 @@ bool MapScene::loadFromTiledJSON(const FilePath& path) {
 		//m_enemies.spawn(MapEnemyKind::Bat, Vec2{ 420, 260 });
 	}
 
+	//Test Door Sample
+	{
+		const s3d::RectF doorRect{ s3d::Vec2{ 420, 260 }, s3d::SizeF{ 32, 48 } }; // 世界坐标
+		auto door = std::make_unique<MapDoor>(
+			doorRect,                             // appearance
+			28.0,                                 // interact radius
+			U"", U"",                              // test, no texture
+			m_collider,
+			MapDoor::State::Closed
+		);
+		m_interactives.add(std::move(door));
+	}
+
+
 	return true;
 }
 
@@ -69,6 +86,8 @@ void MapScene::update(double dt)
 	m_player.postCollisionApply(allowed);
 
 	m_enemies.update(m_collider, m_player.center(), dt);
+
+	m_interactives.update(dt, m_player, m_camera, m_collider, *this);
 
 	const s3d::Vec2 now = m_player.center();
 	if (!m_prevPlayerCenterInit) {
@@ -141,9 +160,10 @@ void MapScene::draw() const {
 		if (m_debugNavi) m_navi.drawDebug(); // 可视化网格与阻挡
 		m_enemies.draw(m_camera.camera()); // 这里的 cam 仅用于将来做裁剪，可不使用
 		m_player.draw();
+		m_interactives.drawWorld(m_camera.camera());
 		if (m_debugCollision) m_collider.drawDebug();
 	}
-
+	m_interactives.drawUI(m_camera);
 	drawVisibilityMask(); // 这个若是屏幕坐标 UI，放在 transformer 外
 }
 
