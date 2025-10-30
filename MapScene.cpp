@@ -33,11 +33,27 @@ bool MapScene::loadFromTiledJSON(const FilePath& path) {
 		Console << U"[MapScene] No collision or failed to parse collision layer.";
 	}
 
-	// 3) Init player & camera via their scripts
-	m_player.init(Vec2{ 256, 256 }, SizeF{ 20, 28 }, 180.0);
+	m_player.setCenter(Vec2{ 256, 256 });
+	m_player.setSpeed(180.0);
 
-	// [Edit] Edit name >> sample_player
-	m_player.setTexture(TextureAsset(U"Sample_Player"));
+	// 新：从一张总表图初始化 8 段动画（示例行序）
+	using St = MapPlayer::PlayerState;
+	using Fa = MapPlayer::Facing4;
+
+	const s3d::FilePath sheet = U"../Assets/MapPlayer/form_sed.png";
+	const s3d::Size frame{ 32, 32 }; // ← 改成你的单帧尺寸
+
+	std::array<MapPlayer::RowBinding, 8> rows{ {
+		{ St::Idle, Fa::Up,    0, 10, 24.0,  true },
+		{ St::Idle, Fa::Left,  1, 10, 24.0,  true },
+		{ St::Idle, Fa::Right, 2, 10, 24.0,  true },
+		{ St::Idle, Fa::Down,  3, 10, 24.0,  true },
+		{ St::Move, Fa::Up,    4, 10, 24.0,  true },
+		{ St::Move, Fa::Left,  5, 10, 24.0,  true },
+		{ St::Move, Fa::Right, 6, 10, 24.0,  true },
+		{ St::Move, Fa::Down,  7, 10, 24.0,  true },
+	} };
+	m_player.initAnimationsFromSheet8(sheet, frame, rows);
 
 	m_camera.init(Scene::Size(), m_bg.worldBounds(), 1.0);
 	m_camera.setSoftDeadZone({ 100, 70 });
@@ -83,9 +99,17 @@ bool MapScene::loadFromTiledJSON(const FilePath& path) {
 
 void MapScene::update(double dt)
 {
-	const Vec2 desired = m_player.updateInput(dt);
-	const Vec2 allowed = m_collider.solveAABB(m_player.aabb(), desired);
-	m_player.postCollisionApply(allowed);
+	// 新：按输入计算“意图位移”
+	const Vec2 wanted = m_player.calcDesiredDelta(dt);
+
+	// 碰撞求解得到允许位移
+	const Vec2 allowed = m_collider.solveAABB(m_player.aabb(), wanted);
+
+	// 应用位移
+	m_player.applyMove(allowed);
+
+	// 用“输入方向”推进动画（即使卡住也能朝向输入方向）
+	m_player.updateAnimation(dt, wanted);
 
 	m_enemies.update(m_collider, m_player.center(), dt);
 
