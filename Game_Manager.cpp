@@ -22,7 +22,7 @@ Game::Game()
 {
 	m_resourceManager.load();
 
-	const FilePath mapPath = U"../Assets/MapBackground/bg_info.json";
+	const FilePath mapPath = U"../Assets/map/town.json";
 	if (not m_explorationScene.loadFromTiledJSON(mapPath))
 	{
 		Console << U"!!!!!!!! MAP LOAD FAILED !!!!!!!!";

@@ -34,7 +34,7 @@ bool MapScene::loadFromTiledJSON(const FilePath& path) {
 	}
 
 	// 3) Init player & camera via their scripts
-	m_player.init(Vec2{ 64, 64 }, SizeF{ 20, 28 }, 180.0);
+	m_player.init(Vec2{ 256, 256 }, SizeF{ 20, 28 }, 180.0);
 
 	// [Edit] Edit name >> sample_player
 	m_player.setTexture(TextureAsset(U"Sample_Player"));
@@ -73,6 +73,8 @@ bool MapScene::loadFromTiledJSON(const FilePath& path) {
 			MapDoor::State::Closed
 		);
 		m_interactives.add(std::move(door));
+
+
 	}
 
 
