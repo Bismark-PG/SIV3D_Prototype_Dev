@@ -4,24 +4,31 @@
 
 	Author : Team Re:ing >> Ko
 
-	Note :
+	Note : Battle System UI
 
 ==============================================================================*/
 #include "stdafx.h"
 #include "Battle_Manager.h"
 
-constexpr int kLogLineHeight = 16; // ログの行の高さ
+constexpr int kLogLineHeight = 14; // ログの行の高さ
 
 BattleManager::BattleManager()
 	: m_font(20)
-	, m_bigFont(28, Typeface::Bold)
+	, m_bigFont(26, Typeface::Bold)
 	, m_logFont(kLogLineHeight)
-	, m_cmdPanel(20, 340, 420, 220)   // コマンドパネルの位置/サイズ
-	, m_logPanel(480, 340, 460, 220)  // ログパネルの位置/サイズ
+	, m_cmdPanel(20, 400, 480, 180)   // コマンドパネルの位置/サイズ
+	, m_logPanel(520, 400, 260, 180)  // ログパネルの位置/サイズ
 	, m_cmdBase(m_cmdPanel.pos.movedBy(20, 60)) // コマンドボタンの開始位置
-	, m_cmdButtonWidth(180.0)         // コマンドボタンの幅
+	, m_cmdButtonWidth(150.0)         // コマンドボタンの幅
+	, m_itemMenuOpen(false)
 {
-	// コンストラクタで特にすることはない
+	// player animation initialization
+	m_anim.emplace(U"../Assets/BattleCharacter/BattlePlayer.png", 96, 128, 7, 1, 0.0, 252.0, 0.0, 0.0);
+	m_anim->BattleAnim_SetFPS(8);
+	m_anim->BattleAnim_SetLoop(true);
+	m_anim->BattleAnim_SetScale(1.5);
+	m_anim->BattleAnim_SetPos(Vec2(100, 180));
+	m_anim->BattleAnim_Start(true);
 }
 
 // [修正] 戦闘開始: PlayerStats と EnemyStats を受け取り BattleSystem を生成
@@ -51,51 +58,12 @@ BattleResult BattleManager::Update()
 	// すでに戦闘が終了していれば結果を返す
 	if (m_result != BattleResult::InProgress) return m_result;
 
-	// 操作可能な状態か確認 (コマンド選択フェーズ + 両者生存)
-	const bool canOperate = (m_battleSystem->phase == Phase::CommandSelect)
-		&& m_battleSystem->player.isAlive()
-		&& m_battleSystem->enemy.isAlive();
-
-	// --- コマンドボタン処理 ---
-	if (SimpleGUI::Button(U"物理攻撃", m_cmdBase, m_cmdButtonWidth, canOperate))
-	{
-		m_battleSystem->player.setSelectedType(ActionType::Physical);
-	}
-	if (SimpleGUI::Button(U"魔法攻撃（MP-5）", m_cmdBase.movedBy(200, 0), m_cmdButtonWidth, canOperate))
-	{
-		m_battleSystem->player.setSelectedType(ActionType::Magical);
-	}
-	if (SimpleGUI::Button(U"防御", m_cmdBase.movedBy(0, 60), m_cmdButtonWidth, canOperate))
-	{
-		m_battleSystem->player.setSelectedType(ActionType::Defend);
-	}
-	if (SimpleGUI::Button(U"アイテム", m_cmdBase.movedBy(200, 60), m_cmdButtonWidth, canOperate))
-	{
-		// [修正] TODO: 実際のアイテムインベントリとの連携が必要
-		// 現在は仮に2つのアイテム(Potion, Ether)をトグル
-		m_battleSystem->player.setSelectedType(ActionType::Item);
-		int currentItem = m_battleSystem->player.getItemIndexOr(-1);
-		int nextItem = (currentItem + 1) % m_battleSystem->items.size(); // アイテム数で循環
-		m_battleSystem->player.setSelectedItem(nextItem);
+	if (m_battleSystem->phase != Phase::CommandSelect) {
+		m_itemMenuOpen = false;
 	}
 
-	// --- 実行 / 次へ ボタン処理 ---
-	const bool needCommand = (m_battleSystem->phase == Phase::CommandSelect)
-		&& m_battleSystem->player.isAlive()
-		&& m_battleSystem->enemy.isAlive();
-	const String actionLabel = needCommand ? U"実行" : U"次へ";
-
-	// [수정] Draw 함수에서 버튼을 그리므로 여기서는 Update 로직만 남김
-	if (SimpleGUI::Button(actionLabel, Vec2(m_cmdPanel.x + 120, m_cmdPanel.y + 170), 120,
-		(m_battleSystem->player.hasTypeSelected() || m_battleSystem->phase != Phase::CommandSelect)
-		&& (m_battleSystem->player.isAlive() || m_battleSystem->enemy.isAlive()) // どちらかが生きていれば進行可能
-		&& m_battleSystem->phase != Phase::BattleOver // まだ終了していなければ
-	))
-	{
-		m_battleSystem->updateOnce();
-
-		// -> BattleSystem::EndCheckで次のターン開始時に解除するように変更
-	}
+	// プレイヤーアニメーション更新
+	if (m_anim) m_anim->BattleAnim_Update();
 
 	// --- 戦闘終了チェック ---
 	if (m_battleSystem->isBattleEnded())
@@ -114,6 +82,10 @@ BattleResult BattleManager::Update()
 	}
 
 	return m_result;
+
+	/*
+	
+	*/
 }
 
 void BattleManager::Draw() const
@@ -122,64 +94,54 @@ void BattleManager::Draw() const
 	if (!m_battleSystem) return;
 
 	// --- キャラクターステータス表示 ---
-	m_bigFont(U"Turn {}"_fmt(m_battleSystem->turn)).draw(20, 20);
-	Line(Vec2(20, 60), Vec2(Scene::Width() - 20, 60)).draw(2);
+	//m_bigFont(U"Turn {}"_fmt(m_battleSystem->turn)).draw(20, 20);
+	//Line(Vec2(20, 60), Vec2(Scene::Width() - 20, 60)).draw(2);
+
+	// Player Animation
+	if (m_anim) m_anim->BattleAnim_Draw();
 
 	// Player Status
-	m_font(U"[{}] Lv{}"_fmt(m_battleSystem->player.getName(), m_battleSystem->player.getLevel())).draw(20, 80);
-	m_font(U"HP {}/{} MP {}/{}"_fmt(
-		m_battleSystem->player.getHP(), m_battleSystem->player.getHPMax(),
+	m_font(U"[{}]   Lv{}"_fmt(m_battleSystem->player.getName(), m_battleSystem->player.getLevel())).draw(320, 280);
+	m_font(U"HP {}/{}"_fmt(
+		m_battleSystem->player.getHP(), m_battleSystem->player.getHPMax()
+	)).draw(370, 320);
+	m_font(U"MP {}/{}"_fmt(
 		m_battleSystem->player.getMP(), m_battleSystem->player.getMPMax()
-	)).draw(20, 110);
+	)).draw(370, 350);
 
 	// Enemy Status
-	const double enemyX = Scene::Width() - 220;
-	m_font(U"[{}] Lv{}"_fmt(m_battleSystem->enemy.getName(), m_battleSystem->enemy.getLevel())).draw(enemyX, 80);
-	m_font(U"HP {}/{} MP {}/{}"_fmt(
-		m_battleSystem->enemy.getHP(), m_battleSystem->enemy.getHPMax(),
-		m_battleSystem->enemy.getMP(), m_battleSystem->enemy.getMPMax()
-	)).draw(enemyX, 110);
+	//const double enemyX = Scene::Width() - 220;
+	m_font(U"[{}] Lv{}"_fmt(m_battleSystem->enemy.getName(), m_battleSystem->enemy.getLevel())).draw(280, 30);
+	m_font(U"HP {}/{}"_fmt(
+		m_battleSystem->enemy.getHP(), m_battleSystem->enemy.getHPMax()
+	)).draw(330, 70);
 
-	// --- コマンドパネル ---
-	m_cmdPanel.draw(ColorF(0, 0.1)).drawFrame(2, 0, Palette::White);
-	m_bigFont(U"Commands").draw(m_cmdPanel.x + 10, m_cmdPanel.y + 10);
+	// コマンドパネル
+	drawCommandUI();
 
-	// [Pluse] Button Draw Logic
-	const bool canOperate = (m_battleSystem->phase == Phase::CommandSelect)
-		&& m_battleSystem->player.isAlive()
-		&& m_battleSystem->enemy.isAlive();
-
-	SimpleGUI::Button(U"物理攻撃", m_cmdBase, m_cmdButtonWidth, canOperate);
-	SimpleGUI::Button(U"魔法攻撃（MP-5）", m_cmdBase.movedBy(200, 0), m_cmdButtonWidth, canOperate);
-	SimpleGUI::Button(U"防御", m_cmdBase.movedBy(0, 60), m_cmdButtonWidth, canOperate);
-	SimpleGUI::Button(U"アイテム", m_cmdBase.movedBy(200, 60), m_cmdButtonWidth, canOperate);
-
-	const bool needCommand = (m_battleSystem->phase == Phase::CommandSelect)
-		&& m_battleSystem->player.isAlive()
-		&& m_battleSystem->enemy.isAlive();
-	const String actionLabel = needCommand ? U"実行" : U"次へ";
-
-	SimpleGUI::Button(actionLabel, Vec2(m_cmdPanel.x + 120, m_cmdPanel.y + 170), 120,
-		(m_battleSystem->player.hasTypeSelected() || m_battleSystem->phase != Phase::CommandSelect)
-		&& (m_battleSystem->player.isAlive() || m_battleSystem->enemy.isAlive())
-		&& m_battleSystem->phase != Phase::BattleOver);
-	// --- Button Draw Logic Done ---
-
-
-	// 選択中のアイテム表示
-	if (m_battleSystem->player.getSelectedTypeOr() == ActionType::Item)
+	// Resolving Overlay drawing
+	if (m_battleSystem->phase != Phase::CommandSelect
+		&& m_battleSystem->phase != Phase::BattleOver)
 	{
-		const int itemIndex = m_battleSystem->player.getItemIndexOr(0);
-		if (InRange(itemIndex, 0, (int)m_battleSystem->items.size() - 1))
-		{
-			m_font(U"選択中：{}"_fmt(m_battleSystem->items[itemIndex].name))
-				.draw(m_cmdPanel.x + 10, m_cmdPanel.y + 150, Palette::Aqua);
-		}
+		// 半透明オーバレイ
+		const RectF overlay = m_cmdPanel.stretched(-2);
+		overlay.draw(ColorF(0.0, 0.65));
+
+		// 省略号
+		const int dots = static_cast<int>(Scene::Time() * 3.0) % 4;
+		String dotsStr(dots, U'.');
+
+		const Vec2 center = overlay.center();
+		m_font(U"Resolving" + dotsStr).drawAt(center.movedBy(0, -6), Palette::White);
+		m_font(U"処理中…操作できません" + dotsStr).drawAt(center.movedBy(0, 16), Palette::Gray);
 	}
+
+	
+	// --- Button Draw Logic Done ---
 
 	// --- ログパネル ---
 	m_logPanel.draw(ColorF(0, 0.1)).drawFrame(2, 0, Palette::White);
-	m_bigFont(U"Battle Log").draw(m_logPanel.x + 10, m_logPanel.y + 10);
+	m_bigFont(U"Battle Log").draw(m_logPanel.x + 10, m_logPanel.y + 5);
 
 	const int    innerLeft = 10;
 	const int    innerTop = 50;
@@ -269,5 +231,120 @@ Array<String> BattleManager::wrapLine(const Font& f, const String& text, double 
 
 	if (!cur.isEmpty()) lines << cur;
 	return lines;
+}
+
+void BattleManager::drawCommandUI() const
+{
+	// --- コマンドパネル ---
+	m_cmdPanel.draw(ColorF(0, 0.1)).drawFrame(2, 0, Palette::White);
+	m_bigFont(U"Commands").draw(m_cmdPanel.x + 10, m_cmdPanel.y + 5);
+
+	// 操作可能な状態か確認 (コマンド選択フェーズ + 両者生存)
+	const bool canOperate =
+		m_battleSystem
+		&& (m_battleSystem->phase == Phase::CommandSelect)
+		&& m_battleSystem->player.isAlive()
+		&& m_battleSystem->enemy.isAlive();
+
+	// --- コマンドボタン処理 ---
+	if (!m_itemMenuOpen)
+	{
+		if (SimpleGUI::Button(U"物理攻撃", m_cmdBase, m_cmdButtonWidth, canOperate))
+		{
+			const_cast<BattleManager*>(this)->m_battleSystem->player.setSelectedType(ActionType::Physical);
+			const_cast<BattleManager*>(this)->resolveFullTurn();
+		}
+		if (SimpleGUI::Button(U"魔法攻撃", m_cmdBase.movedBy(170, 0), m_cmdButtonWidth, canOperate))
+		{
+			const_cast<BattleManager*>(this)->m_battleSystem->player.setSelectedType(ActionType::Magical);
+			const_cast<BattleManager*>(this)->resolveFullTurn();
+		}
+		if (SimpleGUI::Button(U"防御", m_cmdBase.movedBy(0, 60), m_cmdButtonWidth, canOperate))
+		{
+			const_cast<BattleManager*>(this)->m_battleSystem->player.setSelectedType(ActionType::Defend);
+			const_cast<BattleManager*>(this)->resolveFullTurn();
+		}
+		if (SimpleGUI::Button(U"アイテム", m_cmdBase.movedBy(170, 60), m_cmdButtonWidth, canOperate))
+		{
+			// [修正] TODO: 実際のアイテムインベントリとの連携が必要
+			// 現在は仮に2つのアイテム(Potion, Ether)をトグル
+			const_cast<BattleManager*>(this)->m_itemMenuOpen = true;
+		}
+	}
+	else
+	{
+		drawItemMenu(canOperate);
+	}
+
+	// 選択中のアイテム表示
+	if (m_battleSystem->player.getSelectedTypeOr() == ActionType::Item)
+	{
+		const int itemIndex = m_battleSystem->player.getItemIndexOr(0);
+		if (InRange(itemIndex, 0, (int)m_battleSystem->items.size() - 1))
+		{
+			m_font(U"選択中：{}"_fmt(m_battleSystem->items[itemIndex].name))
+				.draw(m_cmdPanel.x + 10, m_cmdPanel.y + 150, Palette::Aqua);
+		}
+	}
+}
+
+void BattleManager::drawItemMenu(bool canOperate) const
+{
+	// item selecting menu
+	const Vec2 menuPos = m_cmdPanel.pos.movedBy(10, 70);
+	const double w = m_cmdPanel.w - 16;
+	const double h = 100;
+
+	RoundRect(menuPos.x, menuPos.y, w, h, 8).draw(ColorF(0, 0.6));
+	m_font(U"アイテムを選択してください").draw(menuPos.movedBy(0, -28), Palette::Aqua);
+
+	const Vec2 hpBtnPos = menuPos.movedBy(12, 12);
+	const Vec2 mpBtnPos = menuPos.movedBy(12 + (w - 24) * 0.5, 12);
+	const Vec2 cancelPos = menuPos.movedBy(w - 150 - 20, h - 44);
+
+	bool clickedHP = SimpleGUI::Button(U"HP回復薬（HP+30）", hpBtnPos, (w - 36) * 0.5, canOperate);
+	bool clickedMP = SimpleGUI::Button(U"MP回復薬（MP+15）", mpBtnPos, (w - 36) * 0.5, canOperate);
+	bool clickedCancel = SimpleGUI::Button(U"キャンセル", cancelPos, 150, true);
+
+	if (clickedHP || clickedMP)
+	{
+		// for testing
+		const int targetIndex = clickedHP ? 0 : 1;
+
+		if ((int)m_battleSystem->items.size() <= targetIndex) {
+			const_cast<BattleManager*>(this)->m_battleSystem->log << U"[System] テスト用アイテムが未登録です (index {})"_fmt(targetIndex);
+			const_cast<BattleManager*>(this)->m_itemMenuOpen = false;
+		}
+		else {
+			const_cast<BattleManager*>(this)->m_battleSystem->player.setSelectedType(ActionType::Item);
+			const_cast<BattleManager*>(this)->m_battleSystem->player.setSelectedItem(targetIndex);
+			const_cast<BattleManager*>(this)->m_itemMenuOpen = false;
+			const_cast<BattleManager*>(this)->resolveFullTurn();
+		}
+	}
+	else if (clickedCancel)
+	{
+		const_cast<BattleManager*>(this)->m_itemMenuOpen = false;
+	}
+}
+
+
+// auto run over the full turn until the next operated time
+void BattleManager::resolveFullTurn()
+{
+	if (!m_battleSystem) return;
+
+	int guard = 0;
+	do
+	{
+		m_battleSystem->updateOnce();
+		if (++guard > 64) break;
+	} while (m_battleSystem
+		&& m_battleSystem->phase != Phase::CommandSelect
+		&& m_battleSystem->phase != Phase::BattleOver);
+
+	if (m_battleSystem->phase != Phase::CommandSelect) {
+		m_itemMenuOpen = false;
+	}
 }
 

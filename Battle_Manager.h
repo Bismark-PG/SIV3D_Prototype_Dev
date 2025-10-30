@@ -9,7 +9,8 @@
 ==============================================================================*/
 #pragma once
 #include <Siv3D.hpp>
-#include "BattleSystem.h" 
+#include "BattleSystem.h"
+#include "BattleAnim.h"
 #include "Player.h"       
 #include "Enemy.h"        
 
@@ -32,9 +33,15 @@ public:
 private:
 	static Array<String> wrapLine(const Font& f, const String& text, double maxWidth);
 
+	void drawCommandUI() const;
+	void drawItemMenu(bool canOperate) const;
+	void resolveFullTurn();
+
 	Optional<BattleSystem> m_battleSystem;
+	Optional<BattleAnim> m_anim;
 	BattleResult m_result = BattleResult::InProgress;
 	double m_expYield = 0;
+	bool m_itemMenuOpen;
 
 	Font m_font;
 	Font m_bigFont;

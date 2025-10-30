@@ -76,7 +76,7 @@ void Game::Update()
 		//	戦闘フェーズ / 最終戦闘フェーズ
 		// --------------------------------
 	case GameplaySequence::Battle:
-	case GameplaySequence::FinalBattle:
+	case GameplaySequence::FinalBattle: 
 	{
 		BattleResult result = m_battleManager.Update();
 		if (result != BattleResult::InProgress)
@@ -163,7 +163,7 @@ void Game::Draw() const
 
 	case GameplaySequence::FinalBattle:
 		m_battleManager.Draw();
-		m_fontBattle(U"[Final Battle]").drawAt(Scene::Center().movedBy(0, -200), Palette::Orange);
+		m_fontBattle(U"[Final Battle]").drawAt(Scene::Center().x - 260, 20, Palette::Orange);
 		break;
 
 	case GameplaySequence::Grow:
