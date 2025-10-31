@@ -4,11 +4,11 @@
 
 	Author : Team Re:ing >> Bismark
 
-	Note :
-
 ==============================================================================*/
 #include "stdafx.h"
 #include "Game_Manager.h"
+
+using namespace s3d;
 
 Game::Game()
 	: Sequence(GameplaySequence::Exploration)
@@ -22,11 +22,12 @@ Game::Game()
 {
 	m_resourceManager.load();
 
-	const FilePath mapPath = U"../Assets/map/town.json";
-	if (not m_explorationScene.loadFromTiledJSON(mapPath))
-	{
+	// --- register multiple maps (key -> json path) ---
+	registerMaps_();
+
+	// --- boot map & spawn (change as you like) ---
+	if (!loadMapAtSpawn_(U"town", U"main")) {
 		Console << U"!!!!!!!! MAP LOAD FAILED !!!!!!!!";
-		Console << U"Failed to load map: " << mapPath;
 	}
 
 	Exploration_Timer.start();
@@ -35,17 +36,98 @@ Game::Game()
 	AudioAsset(U"Sample_Main").play(SecondsF(0.5), MixBus0);
 }
 
+void Game::registerMaps_()
+{
+	// EN: Put your real paths here (consider ResolveAsset if needed).
+	// JP: 実際のパスに置き換えてください（必要なら ResolveAsset のような補助を）
+	m_mapPaths[U"town"] = U"../Assets/map/town/town.json";
+	m_mapPaths[U"school"] = U"../Assets/map/school/school.json";
+}
+
+bool Game::loadMapAtSpawn_(const String& key, const String& spawn)
+{
+	const auto it = m_mapPaths.find(key);
+	if (it == m_mapPaths.end()) {
+		Console << U"[Game] Unknown map key: " << key;
+		return false;
+	}
+
+	MapScene newScene;
+	if (!newScene.loadFromTiledJSON(it->second)) {
+		Console << U"[Game] loadFromTiledJSON failed: " << it->second;
+		return false;
+	}
+
+	if (!newScene.placePlayerAtSpawn(spawn)) {
+		Console << U"[Game] Spawn not found: " << spawn << U" in " << key
+			<< U" (fallback to default 256,256)";
+		// keep default position
+	}
+
+	m_explorationScene = std::move(newScene);
+	return true;
+}
+
+void Game::beginFadeOut_(const MapScene::SceneChangeRequest& req)
+{
+	m_nextReq = req;
+	m_fade = FadePhase::FadingOut;
+	m_fadeT = 0.0;
+}
+
+void Game::applyFadeAndMaybeSwitch_(double dt)
+{
+	if (m_fade == FadePhase::None) return;
+
+	const double delta = dt / m_fadeDuration;
+
+	if (m_fade == FadePhase::FadingOut)
+	{
+		m_fadeT += delta;
+		if (m_fadeT >= 1.0)
+		{
+			// switch at peak
+			if (m_nextReq)
+			{
+				const auto req = *m_nextReq;
+				if (!loadMapAtSpawn_(req.targetMapKey, req.targetSpawn)) {
+					Console << U"[Game] Scene switch failed";
+				}
+			}
+			m_nextReq.reset();
+			m_fade = FadePhase::FadingIn;
+			m_fadeT = 1.0;
+		}
+	}
+	else if (m_fade == FadePhase::FadingIn)
+	{
+		m_fadeT -= delta;
+		if (m_fadeT <= 0.0)
+		{
+			m_fade = FadePhase::None;
+			m_fadeT = 0.0;
+		}
+	}
+}
+
+void Game::drawFadeOverlay_() const
+{
+	if (m_fade == FadePhase::None) return;
+	const double alpha = Clamp(m_fadeT, 0.0, 1.0);
+	Rect{ 0, 0, Scene::Width(), Scene::Height() }.draw(ColorF{ 0, 0, 0, alpha });
+}
+
 void Game::Update()
 {
 	const double dt = Scene::DeltaTime();
 
 	switch (Sequence)
 	{
-		// ---------------
-		//	探索フェイズ
+		// ----------------
+		// Exploration
 		// ----------------
 	case GameplaySequence::Exploration:
-
+	{
 		if (KeyTab.down())
 		{
 			static bool debugCollision = false;
@@ -58,25 +140,40 @@ void Game::Update()
 			m_explorationScene.setDebugNavi(debugNavi);
 		}
 
-		m_explorationScene.update(dt);
-		m_resourceManager.update(Circle{ m_explorationScene.player().center(), 10 });
+		const bool freeze = (m_fade == FadePhase::FadingOut);
 
-		if (auto enemyOpt = m_explorationScene.checkBattleTrigger())
+		if (!freeze)
 		{
-			Set_Sequence(GameplaySequence::Battle, enemyOpt);
+			m_explorationScene.update(dt);
+			m_resourceManager.update(Circle{ m_explorationScene.player().center(), 10 });
+
+			if (auto enemyOpt = m_explorationScene.checkBattleTrigger())
+			{
+				Set_Sequence(GameplaySequence::Battle, enemyOpt);
+			}
+
+			// ---- poll portal request (NEW) ----
+			if (auto req = m_explorationScene.pollSceneChangeRequest())
+			{
+				beginFadeOut_(*req); // start fade-out; switch at the peak
+			}
+
+			if (Exploration_Timer.sF() > 10) // [Debug] was 180
+			{
+				Set_Sequence(GameplaySequence::Grow);
+			}
 		}
 
-		if (Exploration_Timer.sF() > 10) // [Debug] 180 sec, Now Use 10 sec
-		{
-			Set_Sequence(GameplaySequence::Grow);
-		}
+		// progress fade, maybe switch scene in the middle
+		applyFadeAndMaybeSwitch_(dt);
 		break;
+	}
 
-		// --------------------------------
-		//	戦闘フェーズ / 最終戦闘フェーズ
-		// --------------------------------
+	// ----------------
+	// Battle
+	// ----------------
 	case GameplaySequence::Battle:
-	case GameplaySequence::FinalBattle: 
+	case GameplaySequence::FinalBattle:
 	{
 		BattleResult result = m_battleManager.Update();
 		if (result != BattleResult::InProgress)
@@ -105,31 +202,29 @@ void Game::Update()
 				m_explorationScene.removeTriggeredEnemy();
 			}
 		}
+		break;
 	}
-	break;
 
-		// ----------------
-		//	育成フェーズ
-		// ----------------
+	// ----------------
+	// Grow
+	// ----------------
 	case GameplaySequence::Grow:
-		m_growManager.Update(); // Grow_ManagerはUIの開閉とステータス割り振り処理のみ担当
+		m_growManager.Update();
 
-		// [追加] Game_Managerが「次の日へ」ボタンのクリックを直接処理する
-		// Grow_ManagerのUIが表示されていない時だけボタンを表示・処理
-		if (not m_growManager.IsShowingUI()) // IsShowingUI()はGrow_Managerに必要
+		if (not m_growManager.IsShowingUI())
 		{
 			Rect nextDayButtonRect(Scene::Center().x - 100, Scene::Height() - 100, 200, 50);
 			if (nextDayButtonRect.leftClicked())
 			{
-				Go_To_Next_Day(); // 次の日へ進む
+				Go_To_Next_Day();
 			}
 		}
 		break;
 
 		// ----------------
-		//	対話フェーズ
+		// Dialogue (unused)
 		// ----------------
-	case GameplaySequence::Dialogue: // 現在未使用
+	case GameplaySequence::Dialogue:
 		if (SimpleGUI::Button(U"Next day", Vec2{ 300, 400 }, 200))
 		{
 			Go_To_Next_Day();
@@ -146,7 +241,7 @@ void Game::Draw() const
 	{
 	case GameplaySequence::Exploration:
 		m_explorationScene.draw();
-		m_fontDebug(U"[W/A/S/D] Move   [Tab] Toggle Collider Debug").draw(20, 20, ColorF{ 0.9 });
+		m_fontDebug(U"[W/A/S/D] Move   [Tab] Toggle Collider/Navi Debug").draw(20, 20, ColorF{ 0.9 });
 
 		{
 			const int totalSeconds = static_cast<int>(Exploration_Timer.sF());
@@ -155,6 +250,8 @@ void Game::Draw() const
 			const String timeStr = U"{:0>2}:{:0>2}"_fmt(minutes, seconds);
 			m_fontTimer(timeStr).draw(Arg::topRight(Scene::Rect().tr().movedBy(-100, 20)), Palette::White);
 		}
+
+		drawFadeOverlay_(); // NEW: overlay
 		break;
 
 	case GameplaySequence::Battle:
@@ -220,7 +317,7 @@ void Game::Go_To_Next_Day()
 
 void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enemyStats)
 {
-	GameplaySequence Pre_Sequence = Sequence; // 前のシーケンスを保存 (デバッグ用)
+	GameplaySequence Pre_Sequence = Sequence;
 
 	if (Sequence == GameplaySequence::Exploration && nextSequence != GameplaySequence::Exploration)
 	{
@@ -242,7 +339,7 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 	AudioAsset(U"Sample_Talk").stop(SecondsF(0.5));
 	AudioAsset(U"Sample_Ending").stop(SecondsF(0.5));
 
-	Sequence = nextSequence; // シーケンス更新
+	Sequence = nextSequence;
 	Console << U"Debug: Sequence changed from " << FromEnum(Pre_Sequence) << U" to " << FromEnum(Sequence);
 
 	switch (Sequence)
@@ -256,7 +353,6 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 		if (enemyStats)
 		{
 			m_battleManager.StartBattle(m_player, *enemyStats);
-
 			AudioAsset(U"Sample_Battle").setLoop(true);
 			AudioAsset(U"Sample_Battle").play(SecondsF(0.5), MixBus0);
 		}
@@ -278,7 +374,6 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 		bossStats.expYield = 1000;
 
 		m_battleManager.StartBattle(m_player, bossStats);
-
 		AudioAsset(U"Sample_Battle").setLoop(true);
 		AudioAsset(U"Sample_Battle").play(SecondsF(0.5), MixBus0);
 	}
