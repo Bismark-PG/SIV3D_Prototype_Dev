@@ -1,4 +1,12 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"school.json"
+        }
+    },
  "height":100,
  "infinite":false,
  "layers":[
@@ -11181,21 +11189,22 @@
          "y":0
         }, 
         {
+         "class":"main",
          "draworder":"topdown",
-         "id":23,
+         "id":24,
          "name":"spawn",
          "objects":[
                 {
                  "height":0,
-                 "id":980,
+                 "id":984,
                  "name":"main",
                  "point":true,
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":3762,
-                 "y":3040
+                 "x":3103.33333333333,
+                 "y":3115.33333333333
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -11205,12 +11214,12 @@
         }, 
         {
          "draworder":"topdown",
-         "id":24,
+         "id":23,
          "name":"portal",
          "objects":[
                 {
-                 "height":148,
-                 "id":981,
+                 "height":116,
+                 "id":985,
                  "name":"",
                  "properties":[
                         {
@@ -11231,18 +11240,34 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":562,
-                 "x":2638,
-                 "y":2962
+                 "width":1064,
+                 "x":2704,
+                 "y":3026
                 }],
          "opacity":1,
+         "properties":[
+                {
+                 "name":"prompt",
+                 "type":"string",
+                 "value":"Enter Town"
+                }, 
+                {
+                 "name":"target_map",
+                 "type":"string",
+                 "value":"town"
+                }, 
+                {
+                 "name":"target_spawn",
+                 "type":"string",
+                 "value":"main"
+                }],
          "type":"objectgroup",
          "visible":true,
          "x":0,
          "y":0
         }],
  "nextlayerid":25,
- "nextobjectid":982,
+ "nextobjectid":986,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",
