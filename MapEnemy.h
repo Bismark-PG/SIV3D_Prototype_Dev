@@ -27,8 +27,10 @@ public:
 	// 逻辑
 	void updateThink(const s3d::Vec2& playerPos, double dt); // 仅产生“期望位移”
 	s3d::Vec2 desiredDelta() const { return m_desired; }
-	void postCollisionApply(const s3d::Vec2& allowedDelta) { m_center += allowedDelta; }
+	void postCollisionApply(const s3d::Vec2& allowedDelta);
 
+	// ★ 动画：基于“实际位移 allowedDelta”推进
+	void updateAnimation(double dt, const s3d::Vec2& allowedDelta);
 
 	// 绘制
 	void draw() const;
@@ -50,6 +52,24 @@ public:
 
 
 private:
+	// For Animation
+	struct AnimClipRT {
+		s3d::Texture atlas;        // texture
+		s3d::Size    frame{ 0, 0 };
+		int          count{ 0 };
+		double       fps{ 8.0 };
+		int          start{ 0 };    // start row
+		int          row{ -1 };     // row num
+		bool         loop{ true };
+		bool valid() const { return atlas && frame.x > 0 && frame.y > 0 && count > 0; }
+	};
+
+	void initAnimationsFromType(const EnemyAnimSpec& spec);
+	static Facing4 determineFacingFromVector(const s3d::Vec2& v, Facing4 fallback);
+	void switchIfNeeded(EnemyState newState, Facing4 newFacing);
+	void resetAnimator();
+
+private:
 	MapEnemyKind m_kind{ MapEnemyKind::Slime };
 	const MapEnemyType* m_type{ nullptr }; // 指向 DB 内部数据
 
@@ -69,4 +89,13 @@ private:
 	uint32  m_seenDynamicVersion = 0;
 
 	bool m_battleTriggered{ false };
+
+	// animation
+	AnimClipRT             m_clips[2][4]{}; // [EnemyState][Facing4]
+	EnemyState             m_animState{ EnemyState::Idle };
+	Facing4                m_facing{ Facing4::Down };
+	Facing4                m_lastMoveFacing{ Facing4::Down };
+	int                    m_frameIndex{ 0 };
+	double                 m_timeAcc{ 0.0 };
+	bool                   m_anyAnim{ false };
 };
