@@ -32,6 +32,7 @@ void MapEnemySystem::update(const MapCollider& collider, const Vec2& playerPos, 
 		const Vec2 desired = e.desiredDelta();
 		const Vec2 allowed = collider.solveAABB(e.aabb(), desired);
 		e.postCollisionApply(allowed);
+		e.updateAnimation(dt, allowed);
 	}
 }
 

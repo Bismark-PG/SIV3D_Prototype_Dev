@@ -21,6 +21,10 @@ enum class TitleState
 	TutorialCheck
 };
 
+//#include "Battle_Manager.h"
+//#include "Character.h"
+//#include "Player.h"
+//#include "Enemy.h"
 
 void Main()
 {
@@ -31,7 +35,8 @@ void Main()
 	Init_Texture();
 	Init_Audio();
 
-	GameScene Current_Scene = GameScene::Title;
+	//GameScene Current_Scene = GameScene::Title;
+	GameScene Current_Scene = GameScene::Gameplay;
 	Optional<Game> GM;
 
 
@@ -42,8 +47,49 @@ void Main()
 	const Font Font_Warning(30, Typeface::Bold);
 	const Font Font_Text(22);
 
+
+#ifdef _DEBUG
+	// ---------- DEBUG MODE ----------
+
+	bool debugBattle = false;
+	Optional<BattleManager> dbg;
+
+	if (debugBattle) {
+		dbg.emplace();
+
+		PlayerStats p{ .attack = 12, .magicattack = 10, .defense = 6, .magicdefense = 5, .speed = 8 };
+		EnemyStats  e{ .id = 1, .name = U"Slime", .maxHP = 60, .currentHP = 60, .attack = 7, .defense = 2, .speed = 5, .expYield = 12.0 };
+
+		dbg->StartBattle(p, e);
+	}
+
+	// -------------------------------
+#endif
+
+
 	while (System::Update())
 	{
+
+#ifdef _DEBUG
+		if (debugBattle && dbg) {
+			if (KeyF5.down()) {
+				PlayerStats p{ .attack = 14, .magicattack = 12, .defense = 6, .magicdefense = 6, .speed = 9 };
+				EnemyStats  e{ .id = 2, .name = U"Wolf", .maxHP = 200, .currentHP = 200, .attack = 20, .defense = 3, .speed = 7, .expYield = 20.0 };
+				dbg->StartBattle(p, e);
+			}
+
+			const auto r = dbg->Update();
+			dbg->Draw();
+
+			if (r != BattleResult::InProgress && KeySpace.down()) {
+				PlayerStats p{};
+				EnemyStats  e{};
+				dbg->StartBattle(p, e);
+			}
+			continue;
+		}
+#endif
+
 		switch (Current_Scene)
 		{
 			// ----------------

@@ -237,6 +237,9 @@
     <ClCompile Include="MapInteractiveSystem.cpp">
       <Filter>Source Files\Map System</Filter>
     </ClCompile>
+    <ClCompile Include="BattleAnim.cpp">
+      <Filter>Source Files\Battle</Filter>
+    </ClCompile>
     <ClCompile Include="Story.cpp">
       <Filter>Source Files\Game System</Filter>
     </ClCompile>
@@ -973,6 +976,9 @@
     </ClInclude>
     <ClInclude Include="Story.h">
       <Filter>Header Files\Game System</Filter>
+    </ClInclude>
+    <ClInclude Include="BattleAnim.h">
+      <Filter>Header Files\Battle</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

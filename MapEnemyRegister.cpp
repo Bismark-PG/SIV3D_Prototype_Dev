@@ -9,17 +9,35 @@ void RegisterAllEnemyTypes(MapEnemyTypeDB& db) {
 	{
 		MapEnemyType t;
 		t.name = U"Slime";
-		// t.texture = LoadOrDummy(U"Assets/textures/slime.png");
-		t.texture = TextureAsset(U"Map_Enemy_Slime"); // Use TextureAsset
 		t.speed = 70.0;
-		t.alertRadius = 999.0;
-		t.battleRadius = 10.0;
+		t.alertRadius = 180.0;
+		t.battleRadius = 40.0;
 
-		// make battle stats
-		t.maxHP = 50;
-		t.attack = 5;
-		t.defense = 2;
-		t.expYield = 15.0; // Manage stats in Game_Manager.cpp
+		const s3d::String sheet = U"../Assets/MapPlayer/char_move/kunekune.png"; // TextureAsset 名（启动时注册）
+		const s3d::Size   frame{ 32, 32 };
+
+		auto setRow = [&](EnemyState st, Facing4 f, int row, int count, double fps, bool loop) {
+			auto& c = t.anim.clips[(int)st][(int)f];
+			c.assetName = sheet;
+			c.frame = frame;
+			c.count = count;
+			c.fps = fps;
+			c.loop = loop;
+			c.row = row;   // >=0：sheet 第几行
+			c.colStart = 0;
+			};
+
+		// Idle（0..3 行）
+		setRow(EnemyState::Idle, Facing4::Down,  0, 9, 8.0, true);
+		setRow(EnemyState::Idle, Facing4::Right, 1, 9, 8.0, true);
+		setRow(EnemyState::Idle, Facing4::Left,  2, 9, 8.0, true);
+		setRow(EnemyState::Idle, Facing4::Up,    3, 9, 8.0, true);
+
+		// Chase/Move（4..7 行）
+		setRow(EnemyState::Chase, Facing4::Down,  4, 9, 8.0, true);
+		setRow(EnemyState::Chase, Facing4::Right, 5, 9, 8.0, true);
+		setRow(EnemyState::Chase, Facing4::Left,  6, 9, 8.0, true);
+		setRow(EnemyState::Chase, Facing4::Up,    7, 9, 8.0, true);
 
 		db.set(MapEnemyKind::Slime, std::move(t));
 	}

@@ -115,6 +115,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BattleAnim.cpp" />
     <ClCompile Include="BattleSystem.cpp" />
     <ClCompile Include="Battle_Manager.cpp" />
     <ClCompile Include="Character.cpp" />
@@ -347,6 +348,7 @@
     <Xml Include="App\example\xml\test.xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BattleAnim.h" />
     <ClInclude Include="Battle_Manager.h" />
     <ClInclude Include="BattleSystem.h" />
     <ClInclude Include="Character.h" />
