@@ -20,6 +20,7 @@ enum class GameScene
 enum class GameplaySequence
 {
 	Exploration,
+	Story,
 	Battle,
 	Grow,
 	Dialogue,

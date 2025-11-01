@@ -14,6 +14,14 @@
 ==============================================================================*/
 #include "stdafx.h"
 
+enum class TitleState
+{
+	Main,
+	Warning,
+	TutorialCheck
+};
+
+
 void Main()
 {
 	Window::SetTitle(U"Game");
@@ -26,8 +34,13 @@ void Main()
 	GameScene Current_Scene = GameScene::Title;
 	Optional<Game> GM;
 
+
+	TitleState currentTitleState = TitleState::Main;
+
 	const Font Font_Title(40, Typeface::Bold);
 	const Font Font_Ending(30, Typeface::Bold);
+	const Font Font_Warning(30, Typeface::Bold);
+	const Font Font_Text(22);
 
 	while (System::Update())
 	{
@@ -37,15 +50,69 @@ void Main()
 			//	 タイトル
 			// ----------------
 		case GameScene::Title:
-			Font_Title(U"Re:ing").drawAt(Scene::Center().movedBy(0, -50), Palette::Skyblue);
-
-			if (SimpleGUI::Button(U"ゲーム開始 (Start)", Scene::Center().movedBy(0, 50), 200))
+		{
+			switch (currentTitleState)
 			{
-				GM.emplace(); // 新しいゲーム開始時に Game オブジェクトを生成
-				Current_Scene = GameScene::Gameplay;
-				Console << U"Debug: Starting Gameplay.";
+			case TitleState::Main:
+			{
+				Font_Title(U"Re:ing").drawAt(Scene::Center().movedBy(0, -100), ColorF(0.8, 0.9, 1.0));
+
+				if (SimpleGUI::Button(U"ゲーム開始", Scene::Center().movedBy(0, 60), 200))
+				{
+					currentTitleState = TitleState::Warning;
+				}
+				break;
 			}
-			break;
+			case TitleState::Warning:
+			{
+				RectF(Scene::Size()).draw(ColorF(0.1, 0.1, 0.1, 0.9));
+
+				Font_Warning(U"警告").drawAt(Scene::Center().movedBy(0, -100), ColorF(1.0));
+
+				Font_Text(U"本作にはホラー要素や残酷な表現が含まれています。")
+					.drawAt(Scene::Center().movedBy(0, 0), ColorF(1.0));
+				Font_Text(U"心臓の弱い方、妊娠中の方などのご利用はご注意ください。")
+					.drawAt(Scene::Center().movedBy(0, 40), ColorF(1.0));
+
+				const double buttonWidth = 120;
+				const double buttonHeight = 40;
+				const Vec2 buttonBottomRight = Scene::Rect().br().movedBy(-40, -40);
+				const Vec2 buttonTopLeft = buttonBottomRight.movedBy(-buttonWidth, -buttonHeight);
+
+				if (SimpleGUI::Button(U"次へ", buttonTopLeft, buttonWidth))
+				{
+					currentTitleState = TitleState::TutorialCheck;
+				}
+				break;
+			}
+
+			case TitleState::TutorialCheck:
+			{
+				RectF(Scene::Size()).draw(ColorF(0.2, 0.3, 0.4));
+
+				Font_Warning(U"チュートリアルをスキップしますか？")
+					.drawAt(Scene::Center().movedBy(0, -50), ColorF(1.0));
+
+				if (SimpleGUI::Button(U"はい (スキップ)", Scene::Center().movedBy(-300, 50), 200))
+				{
+					GM.emplace(true);
+					Current_Scene = GameScene::Gameplay;
+					currentTitleState = TitleState::Main;
+					Console << U"Debug: Starting Gameplay (Skipped Tutorial).";
+				}
+
+				if (SimpleGUI::Button(U"いいえ (開始)", Scene::Center().movedBy(100, 50), 200))
+				{
+					GM.emplace(false);
+					Current_Scene = GameScene::Gameplay;
+					currentTitleState = TitleState::Main;
+					Console << U"Debug: Starting Gameplay with Tutorial.";
+				}
+				break;
+			}
+			}
+			break; 
+		}
 
 			// ----------------
 			//	ゲームプレイ

@@ -11,13 +11,19 @@
 
 void Init_Audio()
 {
-	AudioAsset::Register(U"Sample_Main", U"Resource/Main.mp3");
-	AudioAsset::Register(U"Sample_Battle", U"Resource/Battle.mp3");
-	AudioAsset::Register(U"Sample_Talk", U"Resource/Talk.mp3");
-	AudioAsset::Register(U"Sample_Ending", U"Resource/Ending.mp3");
+	AudioAsset::Register(U"Chase", U"Assets/Sound/Chaser.wav");
+	AudioAsset::Register(U"Ending_Bad", U"Assets/Sound/Ending_Bad.wav");
+	AudioAsset::Register(U"Ending_Good", U"Assets/Sound/Ending_Good.wav");
+	AudioAsset::Register(U"Explorer", U"Assets/Sound/Explorer.mp3");
+	AudioAsset::Register(U"Final_Battle", U"Assets/Sound/Final_Boss.mp3");
+	AudioAsset::Register(U"Battle", U"Assets/Sound/Normal_Battle.wav");
+	AudioAsset::Register(U"Scary", U"Assets/Sound/Scary.wav");
 
-	AudioAsset::Load(U"Sample_Main");
-	AudioAsset::Load(U"Sample_Battle");
-	AudioAsset::Load(U"Sample_Talk");
-	AudioAsset::Load(U"Sample_Ending");
+	AudioAsset::Load(U"Chase");
+	AudioAsset::Load(U"Ending_Bad");
+	AudioAsset::Load(U"Ending_Good");
+	AudioAsset::Load(U"Explorer");
+	AudioAsset::Load(U"Final_Battle");
+	AudioAsset::Load(U"Battle");
+	AudioAsset::Load(U"Scary");
 }

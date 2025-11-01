@@ -18,11 +18,12 @@
 #include "Battle_Manager.h"
 #include "Game_Resource_Manager.h"
 #include "Enemy.h"
+#include "Story.h"
 
 class Game
 {
 public:
-	Game();
+	Game(bool bSkipTutorial);
 	void Update();
 	void Draw() const;
 
@@ -37,6 +38,7 @@ private:
 
 	PlayerStats m_player;
 	Grow_Manager m_growManager;
+	Story_Manager m_storyManager;
 	MapScene m_explorationScene;
 
 	BattleManager m_battleManager;
@@ -48,8 +50,13 @@ private:
 	Font m_fontTimer;
 	Font m_fontButton;
 
-	void Go_To_Next_Day();
+	bool Is_Game_Finished = false;
+	bool m_bInTutorial;
+	GameplaySequence m_nextSequenceAfterStory;
 
+	void Go_To_Next_Day();
+	void StartStorySequence(StoryID id, GameplaySequence nextSequence);
+	void HandleStoryEnd(StoryID finishedStoryID);
 
 	// Main Logic
 	void Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enemyStats);
@@ -57,8 +64,6 @@ private:
 	void Set_Sequence(GameplaySequence nextSequence);
 
 	GameplaySequence Get_Sequence();
-
-	bool Is_Game_Finished = false;
 };
 
 #endif // GAME_MANAGER_H

@@ -17,15 +17,26 @@ public:
 	Grow_Manager(PlayerStats& playerStats);
 
 	void Add_Exp(double expAmount);
-	void Update();
+
+	bool Update();
+
 	void Draw() const;
 
-	bool IsShowingUI() const;
+	void OnSceneStart();
 
 private:
-	void Draw_Status_UI() const;
-
 	PlayerStats& m_playerStats;
-	bool m_showUI = false;
 	Font m_font;
+
+	bool m_editing = false;
+	bool m_changed = false;
+	int m_usedPoints = 0;  
+
+	int m_tempAttack, m_tempDefense, m_tempMagicAttack, m_tempMagicDefense, m_tempSpeed, m_tempMaxHP, m_tempMaxMP;
+
+	Texture m_backgroundTexture;
+
+	bool m_showPopup = false; 
+	double m_popupTimer = 0.0;
 };
+

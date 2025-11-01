@@ -63,10 +63,10 @@ void BattlePlayer::clearSelectedItem() noexcept
 Stats BattlePlayer::ConvertPlayerStats(const PlayerStats& ps)
 {
 	Stats s;
-	s.maxHP = 100; // Fixed base HP (or could scale with DEF etc.)
-	s.hp = s.maxHP; // Start battle with full HP
-	s.maxMP = 30;  // Fixed base MP (or could scale with MATK etc.)
-	s.mp = s.maxMP; // Start battle with full MP
+	s.maxHP = ps.maxHP;
+	s.hp = s.maxHP;
+	s.maxMP = ps.maxMP;
+	s.mp = s.maxMP;
 	s.atk = ps.attack;
 	s.def = ps.defense;
 	s.mag = ps.magicattack;
@@ -77,3 +77,4 @@ Stats BattlePlayer::ConvertPlayerStats(const PlayerStats& ps)
 	s.crit = 10; // Default critical chance
 	return s;
 }
+

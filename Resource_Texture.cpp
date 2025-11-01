@@ -11,10 +11,12 @@
 
 void Init_Texture()
 {
-	TextureAsset::Register(U"Sample_Player", U"Resource/Sample_Player.png");
-	TextureAsset::Register(U"Sample_Enemy", U"Resource/Sample_Enemy.png");
-	TextureAsset::Register(U"Sample_Map", U"Resource/Sample_Map.png");
-	TextureAsset::Register(U"Sample_Chara", U"Resource/Sample_Chara.png");
+	TextureAsset::Register(U"Battle_Back1", U"Assets/background/battle_back1.png");
+	TextureAsset::Register(U"Battle_Back2", U"Assets/background/battle_back2.png");
+	TextureAsset::Register(U"Battle_Back3", U"Assets/background/battle_back3.png");
+	TextureAsset::Register(U"Grow_Back1", U"Assets/background/graw_back1.png");
+	TextureAsset::Register(U"Grow_Back2", U"Assets/background/graw_back2.png");
+	TextureAsset::Register(U"Grow_Back3", U"Assets/background/graw_back3.png");
 
-	TextureAsset::Register(U"Map_Enemy_Slime", U"Resource/Sample_Enemy.png"); // Debug : use Sample_Enemy
+	TextureAsset::Register(U"Player", U"Assets/Me.png");
 }

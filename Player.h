@@ -18,7 +18,11 @@ struct PlayerStats
 	int defense = 8;
 	int magicdefense = 8;
 	int speed = 6;
+	int maxHP = 100;
+	int maxMP = 30; 
 	int statPoints = 0; // Represents spendable EXP points
+
+	String partnerName; // Aibo Name
 };
 
 // Battle-specific player class

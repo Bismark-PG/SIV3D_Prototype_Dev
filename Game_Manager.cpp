@@ -10,15 +10,18 @@
 #include "stdafx.h"
 #include "Game_Manager.h"
 
-Game::Game()
+Game::Game(bool bSkipTutorial)
 	: Sequence(GameplaySequence::Exploration)
 	, Current_Day(Day::Day1)
 	, m_growManager(m_player)
+	, m_storyManager(m_player)
 	, m_fontBattle(40)
 	, m_fontDays(25)
 	, m_fontDebug(16)
 	, m_fontTimer(20)
 	, m_fontButton(20)
+	, m_bInTutorial(not bSkipTutorial)
+	, m_nextSequenceAfterStory(GameplaySequence::Exploration)
 {
 	m_resourceManager.load();
 
@@ -29,11 +32,18 @@ Game::Game()
 		Console << U"Failed to load map: " << mapPath;
 	}
 
-	Exploration_Timer.start();
-
-	AudioAsset(U"Sample_Main").setLoop(true);
-	AudioAsset(U"Sample_Main").play(SecondsF(0.5), MixBus0);
+	if (bSkipTutorial)
+	{
+		Current_Day = Day::Day2;
+		StartStorySequence(StoryID::Day2_Start, GameplaySequence::Exploration);
+	}
+	else
+	{
+		Current_Day = Day::Day1;
+		StartStorySequence(StoryID::Opening1, GameplaySequence::Story);
+	}
 }
+
 
 void Game::Update()
 {
@@ -41,9 +51,9 @@ void Game::Update()
 
 	switch (Sequence)
 	{
-		// ---------------
-		//	探索フェイズ
-		// ----------------
+	// ---------------
+	//	探索フェイズ
+	// ----------------
 	case GameplaySequence::Exploration:
 
 		if (KeyTab.down())
@@ -66,15 +76,15 @@ void Game::Update()
 			Set_Sequence(GameplaySequence::Battle, enemyOpt);
 		}
 
-		if (Exploration_Timer.sF() > 10) // [Debug] 180 sec, Now Use 10 sec
+		if (Exploration_Timer.sF() > 180) // [Debug] 180 sec
 		{
 			Set_Sequence(GameplaySequence::Grow);
 		}
 		break;
 
-		// --------------------------------
-		//	戦闘フェーズ / 最終戦闘フェーズ
-		// --------------------------------
+	// --------------------------------
+	//	戦闘フェーズ / 最終戦闘フェーズ
+	// --------------------------------
 	case GameplaySequence::Battle:
 	case GameplaySequence::FinalBattle:
 	{
@@ -85,17 +95,20 @@ void Game::Update()
 			{
 				Player_Gains_Exp(m_battleManager.GetExperienceYield());
 
-				if (Sequence == GameplaySequence::FinalBattle)
+				if (m_bInTutorial)
 				{
-					Console << U"Win...";
-					Is_Game_Finished = true;
+					StartStorySequence(StoryID::Tutorial_Introduce, GameplaySequence::Story);
+				}
+				else if (Sequence == GameplaySequence::FinalBattle)
+				{
+					StartStorySequence(StoryID::Ending_Clear, GameplaySequence::Story);
 				}
 				else
 				{
 					Set_Sequence(GameplaySequence::Exploration);
 				}
 			}
-			else { // PlayerLose
+			else {
 				Console << U"lose...";
 				Is_Game_Finished = true;
 			}
@@ -112,17 +125,16 @@ void Game::Update()
 		//	育成フェーズ
 		// ----------------
 	case GameplaySequence::Grow:
-		m_growManager.Update(); // Grow_ManagerはUIの開閉とステータス割り振り処理のみ担当
-
-		// [追加] Game_Managerが「次の日へ」ボタンのクリックを直接処理する
-		// Grow_ManagerのUIが表示されていない時だけボタンを表示・処理
-		if (not m_growManager.IsShowingUI()) // IsShowingUI()はGrow_Managerに必要
+		if (m_growManager.Update())
 		{
-			Rect nextDayButtonRect(Scene::Center().x - 100, Scene::Height() - 100, 200, 50);
-			if (nextDayButtonRect.leftClicked())
-			{
-				Go_To_Next_Day(); // 次の日へ進む
-			}
+			Go_To_Next_Day();
+		}
+		break;
+
+	case GameplaySequence::Story:
+		if (m_storyManager.Update())
+		{
+			HandleStoryEnd(m_storyManager.GetLastStoryID());
 		}
 		break;
 
@@ -168,13 +180,23 @@ void Game::Draw() const
 
 	case GameplaySequence::Grow:
 		m_growManager.Draw();
+		break;
 
-		if (not m_growManager.IsShowingUI())
+	case GameplaySequence::Story:
+		if (m_nextSequenceAfterStory == GameplaySequence::Exploration || Current_Day >= Day::Day2)
 		{
-			Rect nextDayButtonRect(Scene::Center().x - 100, Scene::Height() - 100, 200, 50);
-			nextDayButtonRect.draw(Palette::Forestgreen);
-			m_fontButton(U"次の日へ (Next Day)").drawAt(nextDayButtonRect.center());
+			m_explorationScene.draw();
 		}
+		else if (m_nextSequenceAfterStory == GameplaySequence::Battle)
+		{
+			Scene::Rect().draw(ColorF(0.0, 0.0, 0.0));
+		}
+		else if (m_nextSequenceAfterStory == GameplaySequence::FinalBattle)
+		{
+			Scene::Rect().draw(ColorF(0.0, 0.0, 0.0));
+		}
+
+		m_storyManager.Draw();
 		break;
 
 	case GameplaySequence::Dialogue:
@@ -209,7 +231,11 @@ void Game::Go_To_Next_Day()
 
 		if (Current_Day == Day::Final)
 		{
-			Set_Sequence(GameplaySequence::FinalBattle);
+			StartStorySequence(StoryID::FinalBattle_Start, GameplaySequence::FinalBattle);
+		}
+		else if (Current_Day == Day::Day2)
+		{
+			StartStorySequence(StoryID::Day2_Start, GameplaySequence::Exploration);
 		}
 		else
 		{
@@ -220,21 +246,26 @@ void Game::Go_To_Next_Day()
 
 void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enemyStats)
 {
-	GameplaySequence Pre_Sequence = Sequence; // 前のシーケンスを保存 (デバッグ用)
+	GameplaySequence Pre_Sequence = Sequence;
 
 	if (Sequence == GameplaySequence::Exploration && nextSequence != GameplaySequence::Exploration)
 	{
 		Exploration_Timer.pause();
 	}
-	else if ((Sequence == GameplaySequence::Battle || Sequence == GameplaySequence::FinalBattle)
-		&& nextSequence == GameplaySequence::Exploration)
+	else if (Pre_Sequence != GameplaySequence::Exploration && nextSequence == GameplaySequence::Exploration)
 	{
-		Exploration_Timer.resume();
-	}
-	else if ((Sequence == GameplaySequence::Grow || Sequence == GameplaySequence::Dialogue)
-		&& nextSequence == GameplaySequence::Exploration)
-	{
-		Exploration_Timer.restart();
+		if (Pre_Sequence == GameplaySequence::Story && Current_Day == Day::Day1)
+		{
+			Exploration_Timer.restart();
+		}
+		else if (Exploration_Timer.isPaused())
+		{
+			Exploration_Timer.resume();
+		}
+		else if (not Exploration_Timer.isRunning())
+		{
+			Exploration_Timer.restart();
+		}
 	}
 
 	AudioAsset(U"Sample_Main").stop(SecondsF(0.5));
@@ -242,7 +273,7 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 	AudioAsset(U"Sample_Talk").stop(SecondsF(0.5));
 	AudioAsset(U"Sample_Ending").stop(SecondsF(0.5));
 
-	Sequence = nextSequence; // シーケンス更新
+	Sequence = nextSequence;
 	Console << U"Debug: Sequence changed from " << FromEnum(Pre_Sequence) << U" to " << FromEnum(Sequence);
 
 	switch (Sequence)
@@ -256,13 +287,30 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 		if (enemyStats)
 		{
 			m_battleManager.StartBattle(m_player, *enemyStats);
-
 			AudioAsset(U"Sample_Battle").setLoop(true);
 			AudioAsset(U"Sample_Battle").play(SecondsF(0.5), MixBus0);
 		}
 		else {
-			Console << U"Error: Battle sequence started without enemy stats!";
-			Set_Sequence(GameplaySequence::Exploration);
+			if (m_bInTutorial)
+			{
+				EnemyStats tutorialEnemy;
+				tutorialEnemy.name = U"口裂け女 (Tutorial)";
+				tutorialEnemy.maxHP = 50;
+				tutorialEnemy.currentHP = 50;
+				tutorialEnemy.attack = 5;
+				tutorialEnemy.defense = 1;
+				tutorialEnemy.speed = 3;
+				tutorialEnemy.expYield = 10;
+
+				m_battleManager.StartBattle(m_player, tutorialEnemy);
+				AudioAsset(U"Sample_Battle").setLoop(true);
+				AudioAsset(U"Sample_Battle").play(SecondsF(0.5), MixBus0);
+			}
+			else
+			{
+				Console << U"Error: Battle sequence started without enemy stats!";
+				Set_Sequence(GameplaySequence::Exploration);
+			}
 		}
 		break;
 
@@ -278,13 +326,18 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 		bossStats.expYield = 1000;
 
 		m_battleManager.StartBattle(m_player, bossStats);
-
 		AudioAsset(U"Sample_Battle").setLoop(true);
 		AudioAsset(U"Sample_Battle").play(SecondsF(0.5), MixBus0);
 	}
 	break;
 
 	case GameplaySequence::Grow:
+		m_growManager.OnSceneStart();
+		AudioAsset(U"Sample_Talk").setLoop(true);
+		AudioAsset(U"Sample_Talk").play(SecondsF(0.5), MixBus0);
+		break;
+
+	case GameplaySequence::Story:
 	case GameplaySequence::Dialogue:
 		AudioAsset(U"Sample_Talk").setLoop(true);
 		AudioAsset(U"Sample_Talk").play(SecondsF(0.5), MixBus0);
@@ -300,4 +353,57 @@ void Game::Set_Sequence(GameplaySequence nextSequence)
 GameplaySequence Game::Get_Sequence()
 {
 	return Sequence;
+}
+
+void Game::StartStorySequence(StoryID id, GameplaySequence nextSequence)
+{
+	m_storyManager.StartStory(id);
+	m_nextSequenceAfterStory = nextSequence;
+	Set_Sequence(GameplaySequence::Story);
+}
+
+void Game::HandleStoryEnd(StoryID finishedStoryID)
+{
+	switch (finishedStoryID)
+	{
+	case StoryID::Opening1:
+		StartStorySequence(StoryID::Opening2, GameplaySequence::Story);
+		break;
+	case StoryID::Opening2:
+		StartStorySequence(StoryID::Opening3, GameplaySequence::Story);
+		break;
+	case StoryID::Opening3:
+		StartStorySequence(StoryID::Tutorial_Name, GameplaySequence::Story);
+		break;
+
+	case StoryID::Tutorial_Battle:
+		Set_Sequence(GameplaySequence::Battle);
+		break;
+
+	case StoryID::Tutorial_Introduce:
+		StartStorySequence(StoryID::Tutorial_End, GameplaySequence::Story);
+		break;
+
+	case StoryID::Tutorial_End:
+		m_bInTutorial = false;
+		Current_Day = Day::Day2;
+		StartStorySequence(StoryID::Day2_Start, GameplaySequence::Exploration);
+		break;
+
+	case StoryID::Day2_Start:
+		Set_Sequence(GameplaySequence::Exploration);
+		break;
+
+	case StoryID::FinalBattle_Start:
+		Set_Sequence(GameplaySequence::FinalBattle);
+		break;
+
+	case StoryID::Ending_Clear:
+		Is_Game_Finished = true;
+		break;
+
+	default:
+		Set_Sequence(GameplaySequence::Exploration);
+		break;
+	}
 }
