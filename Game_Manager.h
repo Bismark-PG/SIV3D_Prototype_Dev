@@ -28,25 +28,21 @@ public:
 	void Draw() const;
 
 	bool Is_Game_Done() const;
+
 	void Player_Gains_Exp(double exp);
 
 private:
-	// Sequences (existing)
 	GameplaySequence Sequence;
 	Day Current_Day;
 	Stopwatch Exploration_Timer;
 
-	// Player stats system
 	PlayerStats m_player;
 	Grow_Manager m_growManager;
 	Story_Manager m_storyManager;
 	MapScene m_explorationScene;
-
-	// Battle & resources
 	BattleManager m_battleManager;
 	GameResourceManager m_resourceManager;
 
-	// Fonts
 	Font m_fontBattle;
 	Font m_fontDays;
 	Font m_fontDebug;
@@ -57,21 +53,30 @@ private:
 	bool m_bInTutorial;
 	GameplaySequence m_nextSequenceAfterStory;
 
+	s3d::HashTable<s3d::String, s3d::FilePath> m_mapPaths;
+	enum class FadePhase { None, FadingOut, FadingIn };
+	mutable FadePhase m_fade{ FadePhase::None };
+	mutable double    m_fadeT{ 0.0 };       // 0..1
+	double            m_fadeDuration{ 0.35 };
+	s3d::Optional<MapScene::SceneChangeRequest> m_nextReq;
+
+private:
 	void Go_To_Next_Day();
 	void StartStorySequence(StoryID id, GameplaySequence nextSequence);
 	void HandleStoryEnd(StoryID finishedStoryID);
 
+	void registerMaps_();
+	bool loadMapAtSpawn_(const s3d::String& key, const s3d::String& spawn);
+	void beginFadeOut_(const MapScene::SceneChangeRequest& req);
+	void applyFadeAndMaybeSwitch_(double dt);
+	void drawFadeOverlay_() const;
 
-	// Main Logic
 	void Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enemyStats);
-	// Sub Logic for Useful
 	void Set_Sequence(GameplaySequence nextSequence);
-
 	GameplaySequence Get_Sequence();
 };
 
 #endif // GAME_MANAGER_H
-
 
 
 /*==============================================================================

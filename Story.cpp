@@ -152,26 +152,7 @@ void Story_Manager::StartStory(StoryID id)
 		break;
 
 	case StoryID::Day2_Start:
-		m_currentScript = {
-			{m_scriptProtagonist, U"벌써 2일차인가... 시간이 얼마 없어."},
-			{U"？？？", U"서두르는 게 좋을 거다."}
-		};
-		break;
-
-	case StoryID::FinalBattle_Start:
-		m_currentScript = {
-			{U"？？？", U"드디어 마지막 날이군."},
-			{m_scriptProtagonist, U"당신은...!"},
-			{U"？？？", U"모든 것을 끝내자."}
-		};
-		break;
-
-	case StoryID::Ending_Clear:
-		m_currentScript = {
-			{m_scriptProtagonist, U"끝났다..."},
-			{U"？？？", U"해냈군. 하지만 이건 시작일 뿐이다."},
-			{m_scriptProtagonist, U"(The End)"}
-		};
+		
 		break;
 	}
 }

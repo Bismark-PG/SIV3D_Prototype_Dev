@@ -4,6 +4,8 @@
 
 	Author : Team Re:ing >> Bismark
 
+	Note :
+
 ==============================================================================*/
 #include "stdafx.h"
 #include "Game_Manager.h"
@@ -22,13 +24,23 @@ Game::Game(bool bSkipTutorial)
 	, m_nextSequenceAfterStory(GameplaySequence::Exploration)
 {
 	m_resourceManager.load();
-	const FilePath mapPath = U"../Assets/map/town.json";
-	if (not m_explorationScene.loadFromTiledJSON(mapPath))
+
+	registerMaps_();
+
+	if (bSkipTutorial)
 	{
+		Current_Day = Day::Day2;
+		if (!loadMapAtSpawn_(U"town", U"main")) {
+			Console << U"!!!!!!!! MAP LOAD FAILED !!!!!!!!";
+		}
+		StartStorySequence(StoryID::Day2_Start, GameplaySequence::Exploration);
 	}
 	else
 	{
 		Current_Day = Day::Day1;
+		if (!loadMapAtSpawn_(U"town", U"main")) {
+			Console << U"!!!!!!!! MAP LOAD FAILED !!!!!!!!";
+		}
 		StartStorySequence(StoryID::Opening1, GameplaySequence::Story);
 	}
 }
@@ -40,50 +52,54 @@ void Game::Update()
 
 	switch (Sequence)
 	{
-	// ---------------
-	//	探索フェイズ
-	// ----------------
 	case GameplaySequence::Exploration:
 	{
-		if (KeyTab.down())
-		{
-			static bool debugCollision = false;
-			static bool debugNavi = false;
-
-			debugCollision = !debugCollision;
-
-
-			debugNavi = !debugNavi;
-			m_explorationScene.setDebugNavi(debugNavi);
-		}
-
 		const bool freeze = (m_fade == FadePhase::FadingOut);
 
 		if (!freeze)
 		{
+			if (KeyTab.down())
+			{
+				static bool debugCollision = false;
+				static bool debugNavi = false;
+				debugCollision = !debugCollision;
+				m_explorationScene.setDebugCollision(debugCollision);
+				debugNavi = !debugNavi;
+				m_explorationScene.setDebugNavi(debugNavi);
+			}
+
 			m_explorationScene.update(dt);
 			m_resourceManager.update(Circle{ m_explorationScene.player().center(), 10 });
 
-		m_explorationScene.update(dt);
-		m_resourceManager.update(Circle{ m_explorationScene.player().center(), 10 });
-		{
-		if (auto enemyOpt = m_explorationScene.checkBattleTrigger())
-		{
-			Set_Sequence(GameplaySequence::Battle, enemyOpt);
+			if (auto enemyOpt = m_explorationScene.checkBattleTrigger())
+			{
+				Set_Sequence(GameplaySequence::Battle, enemyOpt);
+			}
+
+			if (auto req = m_explorationScene.pollSceneChangeRequest())
+			{
+				beginFadeOut_(*req);
+			}
+
+			if (Exploration_Timer.sF() > 180) // [Debug] 180 sec
+			{
+				Set_Sequence(GameplaySequence::Grow);
+			}
 		}
 
-		// --------------------------------
-		//	戦闘フェーズ / 最終戦闘フェーズ
-		// --------------------------------
+		applyFadeAndMaybeSwitch_(dt);
+		break;
+	}
+
 	case GameplaySequence::Battle:
 	case GameplaySequence::FinalBattle:
+	{
 		BattleResult result = m_battleManager.Update();
-	// --------------------------------
-	//	戦闘フェーズ / 最終戦闘フェーズ
-	// --------------------------------
+		if (result != BattleResult::InProgress)
+		{
+			if (result == BattleResult::PlayerWin)
 			{
 				Player_Gains_Exp(m_battleManager.GetExperienceYield());
-
 				if (m_bInTutorial)
 				{
 					StartStorySequence(StoryID::Tutorial_Introduce, GameplaySequence::Story);
@@ -101,43 +117,36 @@ void Game::Update()
 				Console << U"lose...";
 				Is_Game_Finished = true;
 			}
-
 			if (Sequence != GameplaySequence::FinalBattle)
 			{
 				m_explorationScene.removeTriggeredEnemy();
 			}
 		}
-		break;
-	}
-
-	// ----------------
-	// Grow
-	// ----------------
-	case GameplaySequence::Grow:
 	}
 	break;
-		// [追加] Game_Managerが「次の日へ」ボタンのクリックを直接処理する
-		// ----------------
-		//	育成フェーズ
-		// ----------------
-			Rect nextDayButtonRect(Scene::Center().x - 100, Scene::Height() - 100, 200, 50);
+
+	case GameplaySequence::Grow:
 		if (m_growManager.Update())
 		{
 			Go_To_Next_Day();
 		}
 		break;
-			{
+
 	case GameplaySequence::Story:
 		if (m_storyManager.Update())
-		break;
+		{
 			HandleStoryEnd(m_storyManager.GetLastStoryID());
 		}
+		break;
+
+	case GameplaySequence::Dialogue:
+		if (SimpleGUI::Button(U"Next day", Vec2{ 300, 400 }, 200))
 		{
 			Go_To_Next_Day();
 		}
-		//	対話フェーズ
+		break;
 	}
-	case GameplaySequence::Dialogue: // 現在未使用
+}
 
 void Game::Draw() const
 {
@@ -147,31 +156,32 @@ void Game::Draw() const
 	{
 	case GameplaySequence::Exploration:
 		m_explorationScene.draw();
-		m_fontDebug(U"[W/A/S/D] Move   [Tab] Toggle Collider/Navi Debug").draw(20, 20, ColorF{ 0.9 });
-
+		m_fontDebug(U"[W/A/S/D] Move   [Tab] Toggle Collider Debug").draw(20, 20, ColorF{ 0.9 });
 		{
 			const int totalSeconds = static_cast<int>(Exploration_Timer.sF());
 			const int minutes = totalSeconds / 60;
 			const int seconds = totalSeconds % 60;
 			const String timeStr = U"{:0>2}:{:0>2}"_fmt(minutes, seconds);
-		m_fontDebug(U"[W/A/S/D] Move   [Tab] Toggle Collider Debug").draw(20, 20, ColorF{ 0.9 });
+			m_fontTimer(timeStr).draw(Arg::topRight(Scene::Rect().tr().movedBy(-100, 20)), Palette::White);
 		}
 
-		drawFadeOverlay_(); // NEW: overlay
+		drawFadeOverlay_();
 		break;
 
 	case GameplaySequence::Battle:
 		m_battleManager.Draw();
 		break;
+
+	case GameplaySequence::FinalBattle:
 		m_battleManager.Draw();
-		m_fontBattle(U"[Final Battle]").drawAt(Scene::Center().x - 260, 20, Palette::Orange);
+		m_fontBattle(U"[Final Battle]").drawAt(Scene::Center().movedBy(0, -200), Palette::Orange);
 		break;
 
 	case GameplaySequence::Grow:
 		m_growManager.Draw();
 		break;
 
-		m_fontBattle(U"[Final Battle]").drawAt(Scene::Center().movedBy(0, -200), Palette::Orange);
+	case GameplaySequence::Story:
 		if (m_nextSequenceAfterStory == GameplaySequence::Exploration || Current_Day >= Day::Day2)
 		{
 			m_explorationScene.draw();
@@ -184,12 +194,10 @@ void Game::Draw() const
 		{
 			Scene::Rect().draw(ColorF(0.0, 0.0, 0.0));
 		}
-
 		m_storyManager.Draw();
 		break;
 
 	case GameplaySequence::Dialogue:
-		// Draw Dialogue UI Here
 		break;
 	}
 
@@ -209,7 +217,6 @@ void Game::Player_Gains_Exp(double exp)
 void Game::Go_To_Next_Day()
 {
 	int Next_Day = static_cast<int>(Current_Day) + 1;
-
 	if (Next_Day > static_cast<int>(Day::Final))
 	{
 		Is_Game_Finished = true;
@@ -217,7 +224,6 @@ void Game::Go_To_Next_Day()
 	else
 	{
 		Current_Day = static_cast<Day>(Next_Day);
-
 		if (Current_Day == Day::Final)
 		{
 			StartStorySequence(StoryID::FinalBattle_Start, GameplaySequence::FinalBattle);
@@ -242,7 +248,7 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 		Exploration_Timer.pause();
 	}
 	else if (Pre_Sequence != GameplaySequence::Exploration && nextSequence == GameplaySequence::Exploration)
-	GameplaySequence Pre_Sequence = Sequence; // 前のシーケンスを保存 (デバッグ用)
+	{
 		if (Pre_Sequence == GameplaySequence::Story && Current_Day == Day::Day1)
 		{
 			Exploration_Timer.restart();
@@ -269,20 +275,12 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 	{
 	case GameplaySequence::Exploration:
 		AudioAsset(U"Sample_Main").setLoop(true);
-	Sequence = nextSequence; // シーケンス更新
+		AudioAsset(U"Sample_Main").play(SecondsF(0.5), MixBus0);
 		break;
-
 	case GameplaySequence::Battle:
 		if (enemyStats)
 		{
 			m_battleManager.StartBattle(m_player, *enemyStats);
-
-			AudioAsset(U"Sample_Battle").setLoop(true);
-			AudioAsset(U"Sample_Battle").play(SecondsF(0.5), MixBus0);
-		}
-		else {
-			Console << U"Error: Battle sequence started without enemy stats!";
-			Set_Sequence(GameplaySequence::Exploration);
 			AudioAsset(U"Sample_Battle").setLoop(true);
 			AudioAsset(U"Sample_Battle").play(SecondsF(0.5), MixBus0);
 		}
@@ -297,7 +295,6 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 				tutorialEnemy.defense = 1;
 				tutorialEnemy.speed = 3;
 				tutorialEnemy.expYield = 10;
-
 				m_battleManager.StartBattle(m_player, tutorialEnemy);
 				AudioAsset(U"Sample_Battle").setLoop(true);
 				AudioAsset(U"Sample_Battle").play(SecondsF(0.5), MixBus0);
@@ -308,24 +305,27 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 				Set_Sequence(GameplaySequence::Exploration);
 			}
 		}
+		break;
+	case GameplaySequence::FinalBattle:
+	{
+		EnemyStats bossStats;
+		bossStats.name = U"Final Boss";
+		bossStats.maxHP = 500;
 		bossStats.currentHP = 500;
 		bossStats.attack = 20;
 		bossStats.defense = 10;
 		bossStats.speed = 10;
 		bossStats.expYield = 1000;
-
 		m_battleManager.StartBattle(m_player, bossStats);
 		AudioAsset(U"Sample_Battle").setLoop(true);
 		AudioAsset(U"Sample_Battle").play(SecondsF(0.5), MixBus0);
 	}
 	break;
-
 	case GameplaySequence::Grow:
 		m_growManager.OnSceneStart();
 		AudioAsset(U"Sample_Talk").setLoop(true);
 		AudioAsset(U"Sample_Talk").play(SecondsF(0.5), MixBus0);
 		break;
-
 	case GameplaySequence::Story:
 	case GameplaySequence::Dialogue:
 		AudioAsset(U"Sample_Talk").setLoop(true);
@@ -364,37 +364,107 @@ void Game::HandleStoryEnd(StoryID finishedStoryID)
 	case StoryID::Opening3:
 		StartStorySequence(StoryID::Tutorial_Name, GameplaySequence::Story);
 		break;
-
 	case StoryID::Tutorial_Battle:
 		Set_Sequence(GameplaySequence::Battle);
 		break;
-
 	case StoryID::Tutorial_Introduce:
 		StartStorySequence(StoryID::Tutorial_End, GameplaySequence::Story);
 		break;
-
 	case StoryID::Tutorial_End:
 		m_bInTutorial = false;
 		Current_Day = Day::Day2;
 		StartStorySequence(StoryID::Day2_Start, GameplaySequence::Exploration);
 		break;
-
 	case StoryID::Day2_Start:
 		Set_Sequence(GameplaySequence::Exploration);
 		break;
-
 	case StoryID::FinalBattle_Start:
 		Set_Sequence(GameplaySequence::FinalBattle);
 		break;
-
 	case StoryID::Ending_Clear:
 		Is_Game_Finished = true;
 		break;
-
 	default:
 		Set_Sequence(GameplaySequence::Exploration);
 		break;
 	}
+}
+
+void Game::registerMaps_()
+{
+	m_mapPaths[U"town"] = U"../Assets/map/town.json";
+	m_mapPaths[U"school"] = U"../Assets/map/school.json";
+}
+
+bool Game::loadMapAtSpawn_(const String& key, const String& spawn)
+{
+	const auto it = m_mapPaths.find(key);
+	if (it == m_mapPaths.end()) {
+		Console << U"[Game] Unknown map key: " << key;
+		return false;
+	}
+
+	MapScene newScene;
+	if (!newScene.loadFromTiledJSON(it->second)) {
+		Console << U"[Game] loadFromTiledJSON failed: " << it->second;
+		return false;
+	}
+
+	if (!newScene.placePlayerAtSpawn(spawn)) {
+		Console << U"[Game] Spawn not found: " << spawn << U" in " << key
+			<< U" (fallback to default 256,256)";
+	}
+
+	m_explorationScene = std::move(newScene);
+	return true;
+}
+
+void Game::beginFadeOut_(const MapScene::SceneChangeRequest& req)
+{
+	m_nextReq = req;
+	m_fade = FadePhase::FadingOut;
+	m_fadeT = 0.0;
+}
+
+void Game::applyFadeAndMaybeSwitch_(double dt)
+{
+	if (m_fade == FadePhase::None) return;
+
+	const double delta = dt / m_fadeDuration;
+
+	if (m_fade == FadePhase::FadingOut)
+	{
+		m_fadeT += delta;
+		if (m_fadeT >= 1.0)
+		{
+			if (m_nextReq)
+			{
+				const auto req = *m_nextReq;
+				if (!loadMapAtSpawn_(req.targetMapKey, req.targetSpawn)) {
+					Console << U"[Game] Scene switch failed";
+				}
+			}
+			m_nextReq.reset();
+			m_fade = FadePhase::FadingIn;
+			m_fadeT = 1.0;
+		}
+	}
+	else if (m_fade == FadePhase::FadingIn)
+	{
+		m_fadeT -= delta;
+		if (m_fadeT <= 0.0)
+		{
+			m_fade = FadePhase::None;
+			m_fadeT = 0.0;
+		}
+	}
+}
+
+void Game::drawFadeOverlay_() const
+{
+	if (m_fade == FadePhase::None) return;
+	const double alpha = Clamp(m_fadeT, 0.0, 1.0);
+	Rect{ 0, 0, Scene::Width(), Scene::Height() }.draw(ColorF{ 0, 0, 0, alpha });
 }
 
 
