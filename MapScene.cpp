@@ -81,10 +81,12 @@ bool MapScene::loadFromTiledJSON(const FilePath& path)
 	m_enemies.bindNavi(&m_navi);
 
 	// 8) Test enemy (existing)
-	{
-		m_enemies.spawn(MapEnemyKind::Slime, Vec2{ 420, 140 });
-		// m_enemies.spawn(MapEnemyKind::Bat, Vec2{ 420, 260 });
-	}
+	m_enemies.clear();
+	//spawnEnemiesOnLoad_(5, MapEnemyKind::Slime, 150.0);
+	//{
+	//	m_enemies.spawn(MapEnemyKind::Slime, Vec2{ 420, 140 });
+	//	// m_enemies.spawn(MapEnemyKind::Bat, Vec2{ 420, 260 });
+	//}
 
 	// 9) Example door (existing)
 	{
@@ -200,6 +202,42 @@ void MapScene::parseSpawnsAndPortalsFromJSON_(const JSON& json)
 
 	Console << U"[MapScene] spawns=" << m_spawns.size()
 		<< U", portals=" << m_portals.size();
+}
+
+void MapScene::spawnEnemiesOnLoad_(int count, MapEnemyKind kind, double minSpawnDist)
+{
+	const RectF bounds = m_bg.worldBounds();
+	const Vec2 playerSpawn = m_player.center();
+	const SizeF enemySize(24, 24);
+	const double minSpawnDistSq = minSpawnDist * minSpawnDist;
+
+	int spawned = 0;
+	int attempts = 0; // 무한 루프 방지
+
+	while (spawned < count && attempts < 200)
+	{
+		attempts++;
+		const Vec2 pos = RandomVec2(bounds);
+
+		if (pos.distanceFromSq(playerSpawn) < minSpawnDistSq)
+		{
+			continue;
+		}
+
+		const RectF enemyAABB = RectF{ Arg::center = pos, enemySize };
+		if (m_collider.intersectsAny(enemyAABB))
+		{
+			continue;
+		}
+
+		m_enemies.spawn(kind, pos);
+		spawned++;
+	}
+
+	if (spawned < count)
+	{
+		Console << U"Warning: Could only spawn {}/{} enemies after {} attempts."_fmt(spawned, count, attempts);
+	}
 }
 
 bool MapScene::placePlayerAtSpawn(const String& spawnName)

@@ -35,13 +35,15 @@ private:
 
 	void drawCommandUI() const;
 	void drawItemMenu(bool canOperate) const;
-	void resolveFullTurn();
+	void drawBattleOverPopup(const String& message) const;
 
 	Optional<BattleSystem> m_battleSystem;
 	Optional<BattleAnim> m_anim;
 	BattleResult m_result = BattleResult::InProgress;
 	double m_expYield = 0;
 	bool m_itemMenuOpen;
+
+	bool m_waitingForPopup = false;
 
 	Font m_font;
 	Font m_bigFont;

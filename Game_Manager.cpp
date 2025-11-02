@@ -102,7 +102,7 @@ void Game::Update()
 					beginFadeOut_(*req); // start fade-out; switch at the peak
 				}
 
-				if (Exploration_Timer.sF() > 20) // [Debug] 180 sec
+				if (Exploration_Timer.sF() > 2) // [Debug] 180 sec
 				{
 					Set_Sequence(GameplaySequence::Grow);
 				}
@@ -236,7 +236,7 @@ void Game::Draw() const
 	case GameplaySequence::FinalBattle:
 		m_texFinalBattleBack.scaled(Scene::Width() / (double)m_texFinalBattleBack.width()).draw(0, 0);
 		m_battleManager.Draw();
-		m_fontBattle(U"[Final Battle]").drawAt(Scene::Center().movedBy(0, -200), ColorF(1.0, 0.5, 0.0));
+		//m_fontBattle(U"[Final Battle]").drawAt(Scene::Center().movedBy(0, -200), ColorF(1.0, 0.5, 0.0));
 		break;
 
 	case GameplaySequence::Grow:
@@ -500,6 +500,11 @@ void Game::HandleStoryEnd(StoryID finishedStoryID)
 	case StoryID::Skip_Input_Partner_Name:
 		m_bInTutorial = false;
 		Current_Day = Day::Day2;
+
+		if (!loadMapAtSpawn_(U"town", U"main")) {
+			Console << U"!!!!!!!! MAP LOAD FAILED ON DAY 2 !!!!!!!!";
+		}
+
 		Set_Sequence(GameplaySequence::Exploration);
 		StartStorySequence(StoryID::Day2_Start, GameplaySequence::Exploration);
 		break;

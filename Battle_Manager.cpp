@@ -52,40 +52,52 @@ void BattleManager::StartBattle(const PlayerStats& playerStats, const EnemyStats
 
 BattleResult BattleManager::Update()
 {
-	// BattleSystem がなければ (戦闘開始前) 何もしない
-	if (!m_battleSystem) return BattleResult::InProgress;
+	if (m_result != BattleResult::InProgress)
+	{
+		return m_result;
+	}
 
-	// すでに戦闘が終了していれば結果を返す
-	if (m_result != BattleResult::InProgress) return m_result;
+	if (m_waitingForPopup)
+	{
+		if (KeyZ.down())
+		{
+			if (m_battleSystem && m_battleSystem->isPlayerWinner())
+			{
+				m_result = BattleResult::PlayerWin;
+				m_expYield = m_battleSystem->enemy.getExpYield();
+			}
+			else
+			{
+				m_result = BattleResult::PlayerLose;
+			}
+			m_battleSystem.reset();
+			m_waitingForPopup = false;
+
+			return m_result;
+		}
+
+		return BattleResult::InProgress;
+	}
+
+	if (!m_battleSystem)
+	{
+		return BattleResult::InProgress;
+	}
 
 	if (m_battleSystem->phase != Phase::CommandSelect) {
 		m_itemMenuOpen = false;
 	}
 
-	// プレイヤーアニメーション更新
 	if (m_anim) m_anim->BattleAnim_Update();
 
-	// --- 戦闘終了チェック ---
+	m_battleSystem->updateOnce();
+
 	if (m_battleSystem->isBattleEnded())
 	{
-		if (m_battleSystem->isPlayerWinner())
-		{
-			m_result = BattleResult::PlayerWin;
-			m_expYield = m_battleSystem->enemy.getExpYield(); // 経験値を保存
-			// [修正] TODO: アイテムドロップ処理
-		}
-		else
-		{
-			m_result = BattleResult::PlayerLose;
-		}
-		m_battleSystem.reset(); // 戦闘終了時に BattleSystem オブジェクトを破棄
+		m_waitingForPopup = true;
 	}
 
-	return m_result;
-
-	/*
-	
-	*/
+	return BattleResult::InProgress;
 }
 
 void BattleManager::Draw() const
@@ -101,6 +113,8 @@ void BattleManager::Draw() const
 	if (m_anim) m_anim->BattleAnim_Draw();
 
 	// Player Status
+	const RectF playerStatBox(310, 275, 200, 110);
+	playerStatBox.draw(ColorF(0.1, 0.1, 0.1, 0.7)).drawFrame(1, Palette::Gray);
 	m_font(U"[{}]   Lv{}"_fmt(m_battleSystem->player.getName(), m_battleSystem->player.getLevel())).draw(320, 280);
 	m_font(U"HP {}/{}"_fmt(
 		m_battleSystem->player.getHP(), m_battleSystem->player.getHPMax()
@@ -111,80 +125,76 @@ void BattleManager::Draw() const
 
 	// Enemy Status
 	//const double enemyX = Scene::Width() - 220;
+	const RectF enemyStatBox(270, 25, 200, 80);
+	enemyStatBox.draw(ColorF(0.1, 0.1, 0.1, 0.7)).drawFrame(1, Palette::Gray);
 	m_font(U"[{}] Lv{}"_fmt(m_battleSystem->enemy.getName(), m_battleSystem->enemy.getLevel())).draw(280, 30);
 	m_font(U"HP {}/{}"_fmt(
 		m_battleSystem->enemy.getHP(), m_battleSystem->enemy.getHPMax()
 	)).draw(330, 70);
 
 	// コマンドパネル
-	drawCommandUI();
-
-	// Resolving Overlay drawing
-	if (m_battleSystem->phase != Phase::CommandSelect
-		&& m_battleSystem->phase != Phase::BattleOver)
+	if (not m_waitingForPopup) // 팝업이 아닐 때만
 	{
-		// 半透明オーバレイ
-		const RectF overlay = m_cmdPanel.stretched(-2);
-		overlay.draw(ColorF(0.0, 0.65));
+		drawCommandUI();
 
-		// 省略号
-		const int dots = static_cast<int>(Scene::Time() * 3.0) % 4;
-		String dotsStr(dots, U'.');
-
-		const Vec2 center = overlay.center();
-		m_font(U"Resolving" + dotsStr).drawAt(center.movedBy(0, -6), Palette::White);
-		m_font(U"処理中…操作できません" + dotsStr).drawAt(center.movedBy(0, 16), Palette::Gray);
-	}
-
-	
-	// --- Button Draw Logic Done ---
-
-	// --- ログパネル ---
-	m_logPanel.draw(ColorF(0, 0.1)).drawFrame(2, 0, Palette::White);
-	m_bigFont(U"Battle Log").draw(m_logPanel.x + 10, m_logPanel.y + 5);
-
-	const int    innerLeft = 10;
-	const int    innerTop = 50;
-	const int    innerRight = 10;
-	const double usableWidth = m_logPanel.w - innerLeft - innerRight;
-
-	// ログの改行処理
-	Array<String> folded;
-	folded.reserve(m_battleSystem->log.size() * 2);
-	for (const auto& raw : m_battleSystem->log)
-	{
-		const auto parts = wrapLine(m_logFont, raw, usableWidth);
-		folded.insert(folded.end(), parts.begin(), parts.end());
-	}
-
-	const int maxLines = static_cast<int>((m_logPanel.h - innerTop - 10) / kLogLineHeight); // 若干の余白を追加
-	const int beginIdx = static_cast<int>(Max<int>(0, folded.size() - maxLines));
-
-	// ログ描画 (パネル内部座標基準)
-	{
-		const ScopedViewport2D viewport(m_logPanel.asRect()); // パネル領域にビューポートを制限
-		int y = innerTop;
-		for (int i = beginIdx; i < folded.size(); ++i)
+		// Resolving Overlay drawing
+		if (m_battleSystem->phase != Phase::CommandSelect
+			&& m_battleSystem->phase != Phase::BattleOver)
 		{
-			m_logFont(folded[i]).draw(innerLeft, y);
-			y += kLogLineHeight;
-			// [修正] パネル下部を超えないように y 座標をチェック
-			if (y >= (m_logPanel.h - 10)) break;
+			// 半透明オーバレイ
+			const RectF overlay = m_cmdPanel.stretched(-2);
+			overlay.draw(ColorF(0.0, 0.65));
+
+			// 省略号
+			const int dots = static_cast<int>(Scene::Time() * 3.0) % 4;
+			String dotsStr(dots, U'.');
+
+			const Vec2 center = overlay.center();
+			m_font(U"Resolving" + dotsStr).drawAt(center.movedBy(0, -6), Palette::White);
+			m_font(U"処理中…操作できません" + dotsStr).drawAt(center.movedBy(0, 16), Palette::Gray);
+		}
+
+		// --- Button Draw Logic Done ---
+
+		// --- ログパネル ---
+		m_logPanel.draw(ColorF(0, 0.1)).drawFrame(2, 0, Palette::White);
+		m_bigFont(U"Battle Log").draw(m_logPanel.x + 10, m_logPanel.y + 5);
+
+		const int    innerLeft = 10;
+		const int    innerTop = 50;
+		const int    innerRight = 10;
+		const double usableWidth = m_logPanel.w - innerLeft - innerRight;
+
+		// ログの改行処理
+		Array<String> folded;
+		folded.reserve(m_battleSystem->log.size() * 2);
+		for (const auto& raw : m_battleSystem->log)
+		{
+			const auto parts = wrapLine(m_logFont, raw, usableWidth);
+			folded.insert(folded.end(), parts.begin(), parts.end());
+		}
+
+		const int maxLines = static_cast<int>((m_logPanel.h - innerTop - 10) / kLogLineHeight); // 若干の余白を追加
+		const int beginIdx = static_cast<int>(Max<int>(0, folded.size() - maxLines));
+
+		// ログ描画 (パネル内部座標基準)
+		{
+			const ScopedViewport2D viewport(m_logPanel.asRect()); // パネル領域にビューポートを制限
+			int y = innerTop;
+			for (int i = beginIdx; i < folded.size(); ++i)
+			{
+				m_logFont(folded[i]).draw(innerLeft, y);
+				y += kLogLineHeight;
+				// [修正] パネル下部を超えないように y 座標をチェック
+				if (y >= (m_logPanel.h - 10)) break;
+			}
 		}
 	}
 
 	// --- 戦闘終了メッセージ ---
-	// [修正] BattleSystem の内部状態の代わりに BattleManager の m_result を使用
-	if (m_result == BattleResult::PlayerWin)
+	if (m_waitingForPopup && m_battleSystem)
 	{
-		m_bigFont(U"勝利！").drawAt(Scene::Center().movedBy(0, -40), Palette::Yellow);
-		// [修正] TODO: 経験値/アイテム獲得結果の表示を追加
-		m_font(U"経験値 {} を獲得"_fmt(static_cast<int>(m_expYield))).drawAt(Scene::Center(), Palette::Yellow);
-	}
-	else if (m_result == BattleResult::PlayerLose)
-	{
-		m_bigFont(U"失敗...").drawAt(Scene::Center().movedBy(0, -40), Palette::Red);
-		// [修正] TODO: ゲームオーバー処理の UI/ロジックが必要
+		drawBattleOverPopup(m_battleSystem->m_resultMessage);
 	}
 }
 
@@ -252,17 +262,14 @@ void BattleManager::drawCommandUI() const
 		if (SimpleGUI::Button(U"物理攻撃", m_cmdBase, m_cmdButtonWidth, canOperate))
 		{
 			const_cast<BattleManager*>(this)->m_battleSystem->player.setSelectedType(ActionType::Physical);
-			const_cast<BattleManager*>(this)->resolveFullTurn();
 		}
 		if (SimpleGUI::Button(U"魔法攻撃", m_cmdBase.movedBy(170, 0), m_cmdButtonWidth, canOperate))
 		{
 			const_cast<BattleManager*>(this)->m_battleSystem->player.setSelectedType(ActionType::Magical);
-			const_cast<BattleManager*>(this)->resolveFullTurn();
 		}
 		if (SimpleGUI::Button(U"防御", m_cmdBase.movedBy(0, 60), m_cmdButtonWidth, canOperate))
 		{
 			const_cast<BattleManager*>(this)->m_battleSystem->player.setSelectedType(ActionType::Defend);
-			const_cast<BattleManager*>(this)->resolveFullTurn();
 		}
 		if (SimpleGUI::Button(U"アイテム", m_cmdBase.movedBy(170, 60), m_cmdButtonWidth, canOperate))
 		{
@@ -319,7 +326,6 @@ void BattleManager::drawItemMenu(bool canOperate) const
 			const_cast<BattleManager*>(this)->m_battleSystem->player.setSelectedType(ActionType::Item);
 			const_cast<BattleManager*>(this)->m_battleSystem->player.setSelectedItem(targetIndex);
 			const_cast<BattleManager*>(this)->m_itemMenuOpen = false;
-			const_cast<BattleManager*>(this)->resolveFullTurn();
 		}
 	}
 	else if (clickedCancel)
@@ -328,23 +334,11 @@ void BattleManager::drawItemMenu(bool canOperate) const
 	}
 }
 
-
-// auto run over the full turn until the next operated time
-void BattleManager::resolveFullTurn()
+void BattleManager::drawBattleOverPopup(const String& message) const
 {
-	if (!m_battleSystem) return;
+	const RectF rect(Arg::center = Scene::Center(), 300, 100);
+	rect.draw(ColorF(0.1, 0.1, 0.1, 0.9)).drawFrame(2, Palette::White);
 
-	int guard = 0;
-	do
-	{
-		m_battleSystem->updateOnce();
-		if (++guard > 64) break;
-	} while (m_battleSystem
-		&& m_battleSystem->phase != Phase::CommandSelect
-		&& m_battleSystem->phase != Phase::BattleOver);
-
-	if (m_battleSystem->phase != Phase::CommandSelect) {
-		m_itemMenuOpen = false;
-	}
+	m_bigFont(message).drawAt(rect.center().movedBy(0, -10), Palette::White);
+	m_font(U"Z : 確認").draw(Arg::bottomRight(rect.br().movedBy(-15, -10)), Palette::White);
 }
-

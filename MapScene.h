@@ -76,6 +76,7 @@ public:
 private:
 	// ----- internal helpers -----
 	void parseSpawnsAndPortalsFromJSON_(const s3d::JSON& json);
+	void spawnEnemiesOnLoad_(int count, MapEnemyKind kind, double minSpawnDist);
 	void updateMovementEnemiesAndCamera_(double dt);
 	void detectPortalAndPrompt_();
 	bool portalIntersectsPlayer_(const Portal& p) const;

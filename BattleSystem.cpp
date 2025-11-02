@@ -72,8 +72,8 @@ void BattleSystem::nextTurn()
 	enemy.setIsDefending(false);
 
 	// [修正] プレイヤーの選択リセットは EndCheck で行う方が安全
-	// player.clearSelectedType();
-	// player.clearSelectedItem();
+	player.clearSelectedType();
+	player.clearSelectedItem();
 }
 
 void BattleSystem::updateOnce()
@@ -86,8 +86,7 @@ void BattleSystem::updateOnce()
 	case Phase::CommandSelect:
 		// [修正] プレイヤーが倒れている場合はコマンド選択不可
 		if (!player.isAlive()) {
-			phase = Phase::EndCheck; // 바로 종료 체크로
-			break;
+			phase = Phase::ActionResolve;
 		}
 
 		if (!player.hasTypeSelected()) return; // まだコマンドを選択していない
@@ -125,15 +124,9 @@ void BattleSystem::updateOnce()
 			auto act = m_queue.front();
 			m_queue.pop_front();
 
-			// [修正] 行動直前にアクターが生存しているか再確認
 			if (act.actor && act.actor->isAlive())
 			{
 				resolveAction(act);
-			}
-			// [修正] アクション処理後にターゲットが倒れたか確認し、キューをクリア (不要なアクションを防止)
-			if (act.target && !act.target->isAlive()) {
-				m_queue.clear();
-				phase = Phase::EndCheck; // すぐに終了チェックへ
 			}
 		}
 		break;
@@ -141,19 +134,19 @@ void BattleSystem::updateOnce()
 	case Phase::EndCheck:
 		if (!player.isAlive() || !enemy.isAlive())
 		{
-			// [修正] 戦闘終了状態に移行
 			phase = Phase::BattleOver;
 			if (player.isAlive()) {
 				pushLog(U"{} をやっつけた！"_fmt(enemy.getName()));
+				m_resultMessage = U"他の都市伝説に食べられて成長した！";
 			}
 			else {
 				pushLog(U"{} はまけてしまった..."_fmt(player.getName()));
+				m_resultMessage = U"他の都市伝説に食べられてしまった...。";
 			}
+			m_showResultPopup = true;
 		}
-		else // 次のターンの準備
+		else
 		{
-			player.clearSelectedType();
-			player.clearSelectedItem();
 			nextTurn();
 		}
 		break;
@@ -255,13 +248,12 @@ void BattleSystem::resolveAction(const PlannedAction& pa)
 // [修正] 戦闘終了確認用の関数
 bool BattleSystem::isBattleEnded() const
 {
-	return phase == Phase::BattleOver;
+	return m_showResultPopup;
 }
 
 // [修正] プレイヤー勝利確認用の関数
 bool BattleSystem::isPlayerWinner() const
 {
-	// 戦闘が終了しており、プレイヤーが生存していれば勝利
-	return isBattleEnded() && player.isAlive();
+	return player.isAlive() && !enemy.isAlive();
 }
 

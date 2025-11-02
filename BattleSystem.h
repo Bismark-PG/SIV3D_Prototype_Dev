@@ -45,6 +45,8 @@ public:
 	int turn = 1;
 
 	Array<Item> items;
+	bool m_showResultPopup = false;
+	String m_resultMessage = U"";
 
 	BattleSystem(BattlePlayer p, BattleEnemy e);
 
