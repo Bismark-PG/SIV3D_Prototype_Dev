@@ -22,7 +22,7 @@ struct PlayerStats
 	int maxMP = 30; 
 	int statPoints = 0; // Represents spendable EXP points
 
-	String partnerName; // Aibo Name
+	String partnerName = U"？？？";  // Aibo Name
 };
 
 // Battle-specific player class

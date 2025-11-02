@@ -24,16 +24,41 @@ namespace
 Grow_Manager::Grow_Manager(PlayerStats& playerStats)
 	: m_playerStats(playerStats),
 	m_font(22),
-	m_backgroundTexture(U"Texture/graw_back1.png", TextureDesc::Mipped)
+	m_partnerPos(500, 240)
 {
+	m_partnerAnim.emplace(U"../Assets/BattleCharacter/BattlePlayer.png", 96, 128, 7, 1, 0.0, 128.0, 0.0, 0.0);
+	if (m_partnerAnim)
+	{
+		m_partnerAnim->BattleAnim_SetFPS(8);
+		m_partnerAnim->BattleAnim_SetLoop(true);
+		m_partnerAnim->BattleAnim_SetScale(1.5);
+		m_partnerAnim->BattleAnim_SetPos(m_partnerPos);
+		m_partnerAnim->BattleAnim_Start(true);
+	}
 }
 
-void Grow_Manager::OnSceneStart()
+void Grow_Manager::OnSceneStart(Day currentDay)
 {
 	m_editing = false;
 	m_changed = false;
 	m_showPopup = false;
 	m_popupTimer = 0.0;
+
+	switch (currentDay)
+	{
+	case Day::Day2:
+	case Day::Day3:
+		m_currentBackground = TextureAsset(U"Grow_Back1");
+		break;
+	case Day::Day4:
+	case Day::Day5:
+		m_currentBackground = TextureAsset(U"Grow_Back2");
+		break;
+	case Day::Day6:
+	case Day::Day7:
+		m_currentBackground = TextureAsset(U"Grow_Back3");
+		break;
+	}
 }
 
 void Grow_Manager::Add_Exp(double expAmount)
@@ -43,6 +68,11 @@ void Grow_Manager::Add_Exp(double expAmount)
 
 bool Grow_Manager::Update()
 {
+	if (m_partnerAnim)
+	{
+		m_partnerAnim->BattleAnim_Update();
+	}
+
 	const double delta = Scene::DeltaTime();
 	bool isDone = false;
 
@@ -140,7 +170,6 @@ bool Grow_Manager::Update()
 			m_popupTimer = 3.5;
 			m_editing = false;
 			m_changed = false;
-			isDone = true;
 		}
 	}
 
@@ -168,11 +197,20 @@ void Grow_Manager::Draw() const
 		m_font(U"ステータスを確定しました").drawAt(popupRect.center(), ColorF(1, 1, 1, alpha));
 	}
 
-	m_backgroundTexture.scaled(Scene::Width() / (double)m_backgroundTexture.width()).draw();
+	if (m_currentBackground)
+	{
+		m_currentBackground.scaled(Scene::Width() / (double)m_currentBackground.width()).draw();
+	}
+	else
+	{
+		Scene::Rect().draw(Palette::Yellow);
+	}
 
-	Circle playerCircle(700, 360, 100);
-	playerCircle.draw(ColorF(1.0, 0.6, 0.5, 0.8)).drawFrame(2, Palette::Black);
-	m_font(U"プレイヤー").drawAt(playerCircle.x, playerCircle.y + 140, Palette::Black);
+
+	if (m_partnerAnim)
+	{
+		m_partnerAnim->BattleAnim_Draw();
+	}
 
 	RectF panel(60, 80, 320, 420);
 	panel.draw(ColorF(0.8, 0.9, 1.0, 0.7)).drawFrame(2, Palette::Gray);
@@ -206,7 +244,10 @@ void Grow_Manager::Draw() const
 		y += 50;
 	}
 
-	m_font(U"残りリソース: {}"_fmt(m_playerStats.statPoints - m_usedPoints)).draw(80, y + 10, Palette::Black);
+	const String resourceText = U"残りリソース: {}"_fmt(m_playerStats.statPoints - m_usedPoints);
+	const RectF resourceRect = m_font(resourceText).region(Arg::center(panel.center().x, y + 20));
+	resourceRect.stretched(10, 5).draw(ColorF(0.1, 0.1, 0.1, 0.7)).drawFrame(1, Palette::Gray);
+	m_font(resourceText).drawAt(resourceRect.center(), Palette::White);
 
 	if (m_changed)
 	{

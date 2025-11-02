@@ -21,11 +21,6 @@ enum class TitleState
 	TutorialCheck
 };
 
-//#include "Battle_Manager.h"
-//#include "Character.h"
-//#include "Player.h"
-//#include "Enemy.h"
-
 void Main()
 {
 	Window::SetTitle(U"Game");
@@ -35,14 +30,15 @@ void Main()
 	Init_Texture();
 	Init_Audio();
 
-	//GameScene Current_Scene = GameScene::Title;
-	GameScene Current_Scene = GameScene::Gameplay;
+	GameScene Current_Scene = GameScene::Title;
+	//GameScene Current_Scene = GameScene::Gameplay;
 	Optional<Game> GM;
 
 
 	TitleState currentTitleState = TitleState::Main;
+	Stopwatch titleFadeTimer;
+	titleFadeTimer.start();
 
-	const Font Font_Title(40, Typeface::Bold);
 	const Font Font_Ending(30, Typeface::Bold);
 	const Font Font_Warning(30, Typeface::Bold);
 	const Font Font_Text(22);
@@ -101,12 +97,26 @@ void Main()
 			{
 			case TitleState::Main:
 			{
-				Font_Title(U"Re:ing").drawAt(Scene::Center().movedBy(0, -100), ColorF(0.8, 0.9, 1.0));
+				const Texture& texBG = TextureAsset(U"Title_BG");
+				texBG.resized(Scene::Size()).draw(0, 0);
 
-				if (SimpleGUI::Button(U"ゲーム開始", Scene::Center().movedBy(0, 60), 200))
+				const Texture& texLogo = TextureAsset(U"Title");
+				const double alpha = Min(titleFadeTimer.sF() / 2.0, 1.0);
+				const RectF topRegion(0, 0, Scene::Width(), Scene::Height() * 2.0 / 3.0);
+
+				texLogo.scaled(2.0).drawAt(topRegion.center(), ColorF(1.0, alpha));
+
+				if (titleFadeTimer.sF() >= 3.0)
 				{
-					currentTitleState = TitleState::Warning;
+					const double buttonWidth = 200.0;
+					const Vec2 buttonPos(Scene::Center().x - (buttonWidth / 2.0), Scene::Height() * 5.0 / 6.0);
+
+					if (SimpleGUI::Button(U"ゲーム開始", buttonPos, buttonWidth))
+					{
+						currentTitleState = TitleState::Warning;
+					}
 				}
+
 				break;
 			}
 			case TitleState::Warning:
@@ -134,12 +144,12 @@ void Main()
 
 			case TitleState::TutorialCheck:
 			{
-				RectF(Scene::Size()).draw(ColorF(0.2, 0.3, 0.4));
+				RectF(Scene::Size()).draw(ColorF(0.1, 0.1, 0.1, 0.9));
 
 				Font_Warning(U"チュートリアルをスキップしますか？")
 					.drawAt(Scene::Center().movedBy(0, -50), ColorF(1.0));
 
-				if (SimpleGUI::Button(U"はい (スキップ)", Scene::Center().movedBy(-300, 50), 200))
+				if (SimpleGUI::Button(U"はい", Scene::Center().movedBy(-300, 50), 200))
 				{
 					GM.emplace(true);
 					Current_Scene = GameScene::Gameplay;
@@ -147,7 +157,7 @@ void Main()
 					Console << U"Debug: Starting Gameplay (Skipped Tutorial).";
 				}
 
-				if (SimpleGUI::Button(U"いいえ (開始)", Scene::Center().movedBy(100, 50), 200))
+				if (SimpleGUI::Button(U"いいえ", Scene::Center().movedBy(100, 50), 200))
 				{
 					GM.emplace(false);
 					Current_Scene = GameScene::Gameplay;
@@ -187,19 +197,22 @@ void Main()
 			//	 エンディング
 			// ----------------
 		case GameScene::Ending:
-			// 簡単なエンディングメッセージ表示
-			Font_Ending(U"ゲーム終了 (Game Over or Clear)").drawAt(Scene::Center().movedBy(0, -30));
+			RectF(Scene::Size()).draw(ColorF(0.1, 0.1, 0.1, 0.9));
 
-			if (SimpleGUI::Button(U"タイトルへ (To Title)", Scene::Center().movedBy(0, 30), 200))
+			Font_Warning(U"タイトルに戻りますか？")
+				.drawAt(Scene::Center().movedBy(0, -50), ColorF(1.0));
+
+			if (SimpleGUI::Button(U"はい", Scene::Center().movedBy(-300, 50), 200))
 			{
 				GM.reset(); // Game オブジェクトを破棄
 				Current_Scene = GameScene::Title; // タイトルシーンへ遷移
+				titleFadeTimer.restart();
 				Console << U"Debug: Returning to Title Screen.";
+			}
 
-				AudioAsset(U"Sample_Main").stop(SecondsF(0.5));
-				AudioAsset(U"Sample_Battle").stop(SecondsF(0.5));
-				AudioAsset(U"Sample_Talk").stop(SecondsF(0.5));
-				AudioAsset(U"Sample_Ending").stop(SecondsF(0.5)); // BGM停止など追加処理
+			if (SimpleGUI::Button(U"いいえ", Scene::Center().movedBy(100, 50), 200))
+			{
+				System::Exit();
 			}
 			break;
 		}

@@ -10,6 +10,8 @@
 #pragma once
 #include <Siv3D.hpp>
 #include "Player.h"
+#include "BattleAnim.h"  
+#include "In_Game_Enum.h"
 
 class Grow_Manager
 {
@@ -22,7 +24,7 @@ public:
 
 	void Draw() const;
 
-	void OnSceneStart();
+	void OnSceneStart(Day currentDay);
 
 private:
 	PlayerStats& m_playerStats;
@@ -34,9 +36,12 @@ private:
 
 	int m_tempAttack, m_tempDefense, m_tempMagicAttack, m_tempMagicDefense, m_tempSpeed, m_tempMaxHP, m_tempMaxMP;
 
-	Texture m_backgroundTexture;
+	Texture m_currentBackground;
 
 	bool m_showPopup = false; 
 	double m_popupTimer = 0.0;
+
+	Optional<BattleAnim> m_partnerAnim;
+	Vec2 m_partnerPos;
 };
 

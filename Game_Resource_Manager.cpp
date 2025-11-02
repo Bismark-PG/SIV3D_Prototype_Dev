@@ -13,14 +13,14 @@
 
 void GameResourceManager::load()
 {
-	m_itemDatabase.emplace(U"star",
-		ItemData{ U"スター", U"10秒間、無敵になる", TextureAsset(U"Item_Star") });
+	//m_itemDatabase.emplace(U"star",
+	//	ItemData{ U"スター", U"10秒間、無敵になる", TextureAsset(U"Item_Star") });
 
-	m_itemDatabase.emplace(U"box",
-		ItemData{ U"ハテナボックス", U"攻撃力が 5 上昇する", TextureAsset(U"Item_Box") });
+	//m_itemDatabase.emplace(U"box",
+	//	ItemData{ U"ハテナボックス", U"攻撃力が 5 上昇する", TextureAsset(U"Item_Box") });
 
-	m_itemDatabase.emplace(U"ramen",
-		ItemData{ U"ラーメン", U"HPが 30 回復する", TextureAsset(U"Item_Ramen") });
+	//m_itemDatabase.emplace(U"ramen",
+	//	ItemData{ U"ラーメン", U"HPが 30 回復する", TextureAsset(U"Item_Ramen") });
 }
 
 void GameResourceManager::spawnItem(const String& key, const Vec2& pos)
