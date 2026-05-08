@@ -61,7 +61,7 @@ BattleResult BattleManager::Update()
 	{
 		if (KeyZ.down())
 		{
-			if (m_battleSystem && m_battleSystem->isPlayerWinner())
+			if (m_battleSystem && m_battleSystem->WasPlayerWinner())
 			{
 				m_result = BattleResult::PlayerWin;
 				m_expYield = m_battleSystem->enemy.getExpYield();
@@ -336,9 +336,9 @@ void BattleManager::drawItemMenu(bool canOperate) const
 
 void BattleManager::drawBattleOverPopup(const String& message) const
 {
-	const RectF rect(Arg::center = Scene::Center(), 300, 100);
+	const RectF rect(Arg::center = Scene::Center(), 600, 100);
 	rect.draw(ColorF(0.1, 0.1, 0.1, 0.9)).drawFrame(2, Palette::White);
 
 	m_bigFont(message).drawAt(rect.center().movedBy(0, -10), Palette::White);
-	m_font(U"Z : 確認").draw(Arg::bottomRight(rect.br().movedBy(-15, -10)), Palette::White);
+	m_font(U"Z : 확인").draw(Arg::bottomRight(rect.br().movedBy(-15, -10)), Palette::White);
 }

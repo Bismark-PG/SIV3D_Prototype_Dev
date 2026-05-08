@@ -23,7 +23,9 @@ namespace
 	{
 		TextReader reader{ tsxPath };
 		if (!reader) {
+#if defined(DEBUG) || defined(_DEBUG)
 			Console << U"[MapBackground] Failed to open TSX: " << tsxPath;
+#endif
 			return false;
 		}
 
@@ -45,13 +47,17 @@ namespace
 		{
 			String v;
 			if (!extractAttr(U"tilewidth", xml, v)) {
+#if defined(DEBUG) || defined(_DEBUG)
 				Console << U"[MapBackground] TSX missing tilewidth: " << tsxPath;
+#endif
 				return false;
 			}
 			out.tileW = Parse<int>(v);
 
 			if (!extractAttr(U"tileheight", xml, v)) {
+#if defined(DEBUG) || defined(_DEBUG)
 				Console << U"[MapBackground] TSX missing tileheight: " << tsxPath;
+#endif
 				return false;
 			}
 			out.tileH = Parse<int>(v);
@@ -96,7 +102,9 @@ namespace
 			}
 
 			if (out.imageListAbs.empty()) {
+#if defined(DEBUG) || defined(_DEBUG)
 				Console << U"[MapBackground] TSX image-collection: no images found: " << tsxPath;
+#endif
 				return false;
 			}
 			return true;
@@ -105,7 +113,9 @@ namespace
 		// Atlas tileset: single <image source="...">
 		String imageRel;
 		if (!extractAttr(U"source", xml, imageRel)) {
+#if defined(DEBUG) || defined(_DEBUG)
 			Console << U"[MapBackground] TSX atlas has no <image source>: " << tsxPath;
+#endif
 			return false;
 		}
 		out.isImageCollection = false;
@@ -143,19 +153,25 @@ bool MapBackground::loadFromTiledJSON(const FilePath& path)
 
 	const JSON json = JSON::Load(path);
 	if (!json) {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[MapBackground] Failed to load JSON: " << path;
+#endif
 		return false;
 	}
 
 	const String jtype = json[U"type"].getOr<String>(U"(no type)");
 	if (jtype != U"map") {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[MapBackground] Invalid JSON type (expected 'map'): " << jtype;
+#endif
 		return false;
 	}
 
 	if (!(json.hasElement(U"tilewidth") && json.hasElement(U"tileheight")
 		&& json.hasElement(U"width") && json.hasElement(U"height"))) {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[MapBackground] Missing required fields (tilewidth/tileheight/width/height).";
+#endif
 		return false;
 	}
 
@@ -166,7 +182,9 @@ bool MapBackground::loadFromTiledJSON(const FilePath& path)
 	// ---- tilesets ----
 	const auto tilesets = json[U"tilesets"];
 	if (!tilesets || !tilesets.isArray()) {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[MapBackground] 'tilesets' missing or not an array.";
+#endif
 		return false;
 	}
 
@@ -177,7 +195,9 @@ bool MapBackground::loadFromTiledJSON(const FilePath& path)
 		Tileset t;
 		t.firstGID = ts[U"firstgid"].getOr<int>(0);
 		if (t.firstGID <= 0) {
+#if defined(DEBUG) || defined(_DEBUG)
 			Console << U"[MapBackground] tileset[" << i << U"] invalid firstgid.";
+#endif
 			return false;
 		}
 
@@ -189,14 +209,26 @@ bool MapBackground::loadFromTiledJSON(const FilePath& path)
 			t.tileH = ts[U"tileheight"].get<int>();
 			const String imageRel = ts[U"image"].getString();
 			const FilePath atlasAbs = FileSystem::PathAppend(FileSystem::ParentPath(path), imageRel);
-
+#if defined(DEBUG) || defined(_DEBUG)
 			Console << U"[MapBackground] tileset[" << i << U"] image: " << atlasAbs;
+#endif
 			t.atlas = s3d::Texture{ atlasAbs, s3d::TextureDesc::Unmipped };
-			if (!t.atlas) { Console << U"[MapBackground] Failed tileset image: " << atlasAbs; return false; }
-
+			if (!t.atlas)
+			{
+#if defined(DEBUG) || defined(_DEBUG)
+				Console << U"[MapBackground] Failed tileset image: " << atlasAbs;
+#endif
+				return false;
+			}
 			t.cols = (t.atlas.width() / Max(1, t.tileW));
 			t.rows = (t.atlas.height() / Max(1, t.tileH));
-			if (t.cols <= 0 || t.rows <= 0) { Console << U"[MapBackground] Invalid atlas grid."; return false; }
+			if (t.cols <= 0 || t.rows <= 0)
+			{
+#if defined(DEBUG) || defined(_DEBUG)
+				Console << U"[MapBackground] Invalid atlas grid.";
+#endif
+				return false;
+			}
 		}
 		// Case B: Inline image-collection tileset (tiles[] with image)
 		else if (ts.hasElement(U"tiles") && !ts.hasElement(U"image"))
@@ -207,7 +239,9 @@ bool MapBackground::loadFromTiledJSON(const FilePath& path)
 
 			const auto tilesArr = ts[U"tiles"];
 			if (!tilesArr || !tilesArr.isArray() || (tilesArr.size() == 0)) {
+#if defined(DEBUG) || defined(_DEBUG)
 				Console << U"[MapBackground] tileset[" << i << U"] has empty 'tiles'.";
+#endif
 				return false;
 			}
 
@@ -216,7 +250,9 @@ bool MapBackground::loadFromTiledJSON(const FilePath& path)
 				maxID = std::max(maxID, it[U"id"].getOr<int>(-1));
 			}
 			if (maxID < 0) {
+#if defined(DEBUG) || defined(_DEBUG)
 				Console << U"[MapBackground] tileset[" << i << U"] no valid tile ids.";
+#endif
 				return false;
 			}
 			t.images.assign(maxID + 1, Texture{});
@@ -226,7 +262,13 @@ bool MapBackground::loadFromTiledJSON(const FilePath& path)
 				const String imgRel = it[U"image"].getString();
 				const FilePath imgAbs = FileSystem::PathAppend(FileSystem::ParentPath(path), imgRel);
 				s3d::Texture tex{ imgAbs, s3d::TextureDesc::Unmipped };
-				if (!tex) { Console << U"[MapBackground] Failed image-collection tile: " << imgAbs; return false; }
+				if (!tex)
+				{
+#if defined(DEBUG) || defined(_DEBUG)
+					Console << U"[MapBackground] Failed image-collection tile: " << imgAbs;
+#endif
+				return false;
+				}
 				t.images[id] = std::move(tex);
 			}
 		}
@@ -242,12 +284,27 @@ bool MapBackground::loadFromTiledJSON(const FilePath& path)
 			if (!pr.isImageCollection) {
 				t.kind = Tileset::Kind::Atlas;
 				t.tileW = pr.tileW; t.tileH = pr.tileH;
+#if defined(DEBUG) || defined(_DEBUG)
 				Console << U"[MapBackground] tileset[" << i << U"] image: " << pr.atlasImageAbs;
+#endif
 				t.atlas = Texture{ pr.atlasImageAbs };
-				if (!t.atlas) { Console << U"[MapBackground] Failed tileset image: " << pr.atlasImageAbs; return false; }
+
+				if (!t.atlas)
+				{
+#if defined(DEBUG) || defined(_DEBUG)
+					Console << U"[MapBackground] Failed tileset image: " << pr.atlasImageAbs;
+#endif
+					return false;
+				}
 				t.cols = (pr.cols > 0 ? pr.cols : (t.atlas.width() / Max(1, t.tileW)));
 				t.rows = (t.atlas.height() / Max(1, t.tileH));
-				if (t.cols <= 0 || t.rows <= 0) { Console << U"[MapBackground] Invalid atlas grid."; return false; }
+				if (t.cols <= 0 || t.rows <= 0)
+				{
+#if defined(DEBUG) || defined(_DEBUG)
+					Console << U"[MapBackground] Invalid atlas grid.";
+#endif
+				return false;
+				}
 			}
 			else {
 				t.kind = Tileset::Kind::ImageCollection;
@@ -258,14 +315,22 @@ bool MapBackground::loadFromTiledJSON(const FilePath& path)
 				for (int id = 0; id <= maxID; ++id) {
 					const FilePath imgAbs = pr.imageListAbs[id];
 					Texture tex{ imgAbs };
-					if (!tex) { Console << U"[MapBackground] Failed image-collection tile: " << imgAbs; return false; }
+					if (!tex)
+					{
+#if defined(DEBUG) || defined(_DEBUG)
+						Console << U"[MapBackground] Failed image-collection tile: " << imgAbs;
+#endif
+						return false;
+					}
 					t.images[id] = std::move(tex);
 				}
 			}
 		}
 		else
 		{
+#if defined(DEBUG) || defined(_DEBUG)
 			Console << U"[MapBackground] tileset[" << i << U"] unsupported structure (no image/source/tiles).";
+#endif
 			return false;
 		}
 

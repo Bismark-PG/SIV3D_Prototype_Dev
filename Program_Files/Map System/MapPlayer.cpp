@@ -112,9 +112,11 @@ void MapPlayer::setClipsFromSheet8(const FilePath& sheet, Size frame,
 		}
 		setClip(r.st, r.face, c);
 	}
+#if defined(DEBUG) || defined(_DEBUG)
 	Console << U"[Player] sheet size: " << shared.size()
 		<< U", frame: " << frame
 		<< U", example count: " << m_clips[(int)PlayerState::Idle][(int)Facing4::Down].count;
+#endif
 }
 
 // ===== Convenience initializers =====
@@ -220,7 +222,13 @@ void MapPlayer::draw() const
 	if (clip.valid())
 	{
 		static bool once = false;
-		if (!once) { Console << U"[Player] No valid clip for state/facing"; once = true; }
+		if (!once)
+		{
+#if defined(DEBUG) || defined(_DEBUG)
+			Console << U"[Player] No valid clip for state/facing";
+#endif
+			once = true;
+		}
 
 		const Rect src = calcSrcRect(clip, m_frameIndex);
 

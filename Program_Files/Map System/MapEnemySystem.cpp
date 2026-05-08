@@ -14,7 +14,9 @@ MapEnemy& MapEnemySystem::spawn(MapEnemyKind kind, const Vec2& spawnWorld) {
 	else {
 		MapEnemyType defaultType;
 		e.init(kind, spawnWorld, defaultType);
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"Warning: Spawning enemy kind {} with default type!"_fmt((int)kind);
+#endif
 	}
 
 	//when spawn, bind navi
@@ -57,10 +59,14 @@ Optional<std::pair<MapEnemyKind, MapEnemySystem::EnemyID>> MapEnemySystem::pollB
 // [Plus] Remove enemy by ID
 void MapEnemySystem::removeEnemyByID(EnemyID id) {
 	if (id < m_list.size()) {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[MapEnemySystem] Removing enemy at index: " << id;
+#endif
 		m_list.remove_at(id);
 	}
 	else {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"Warning: Tried to remove enemy with invalid ID: " << id;
+#endif
 	}
 }

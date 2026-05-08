@@ -257,3 +257,7 @@ bool BattleSystem::isPlayerWinner() const
 	return player.isAlive() && !enemy.isAlive();
 }
 
+bool BattleSystem::WasPlayerWinner() const
+{
+	return player.isAlive();
+}

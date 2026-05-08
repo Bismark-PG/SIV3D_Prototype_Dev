@@ -23,7 +23,7 @@ enum class TitleState
 
 void Main()
 {
-	Window::SetTitle(U"Game");
+	Window::SetTitle(U"育てる都市伝説");
 	Scene::SetBackground(ColorF(0.2, 0.3, 0.4));
 
 	// リソース初期化
@@ -154,7 +154,9 @@ void Main()
 					GM.emplace(true);
 					Current_Scene = GameScene::Gameplay;
 					currentTitleState = TitleState::Main;
+#if defined(DEBUG) || defined(_DEBUG)
 					Console << U"Debug: Starting Gameplay (Skipped Tutorial).";
+#endif
 				}
 
 				if (SimpleGUI::Button(U"いいえ", Scene::Center().movedBy(100, 50), 200))
@@ -162,7 +164,9 @@ void Main()
 					GM.emplace(false);
 					Current_Scene = GameScene::Gameplay;
 					currentTitleState = TitleState::Main;
+#if defined(DEBUG) || defined(_DEBUG)
 					Console << U"Debug: Starting Gameplay with Tutorial.";
+#endif
 				}
 				break;
 			}
@@ -182,13 +186,17 @@ void Main()
 				// ゲーム終了条件を確認し処理
 				if (GM->Is_Game_Done())
 				{
+#if defined(DEBUG) || defined(_DEBUG)
 					Console << U"Debug: Game is Done. Transitioning to Ending.";
+#endif
 					Current_Scene = GameScene::Ending; // エンディングシーンへ遷移
 				}
 			}
 			else
 			{
+#if defined(DEBUG) || defined(_DEBUG)
 				Console << U"Error: GM is not valid in Gameplay scene!";
+#endif
 				Current_Scene = GameScene::Title; // 安全のためタイトルへ戻る
 			}
 			break;
@@ -207,7 +215,9 @@ void Main()
 				GM.reset(); // Game オブジェクトを破棄
 				Current_Scene = GameScene::Title; // タイトルシーンへ遷移
 				titleFadeTimer.restart();
+#if defined(DEBUG) || defined(_DEBUG)
 				Console << U"Debug: Returning to Title Screen.";
+#endif
 			}
 
 			if (SimpleGUI::Button(U"いいえ", Scene::Center().movedBy(100, 50), 200))

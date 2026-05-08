@@ -10,7 +10,9 @@ bool MapCollider::loadCollisionFromTiledJSON(const FilePath& path) {
 	clear();
 	const JSON json = JSON::Load(path);
 	if (!json) {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[MapCollider] Failed to load JSON: " << path;
+#endif
 		return false;
 	}
 	for (const auto& layer : json[U"layers"].arrayView()) {

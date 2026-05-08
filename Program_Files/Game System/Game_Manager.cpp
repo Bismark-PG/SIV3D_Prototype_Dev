@@ -35,7 +35,9 @@ Game::Game(bool bSkipTutorial)
 	{
 		Current_Day = Day::Day2;
 		if (!loadMapAtSpawn_(U"town", U"main")) {
+#if defined(DEBUG) || defined(_DEBUG)
 			Console << U"!!!!!!!! MAP LOAD FAILED !!!!!!!!";
+#endif
 		}
 		StartStorySequence(StoryID::Story_For_Skip, GameplaySequence::Story);
 	}
@@ -43,7 +45,9 @@ Game::Game(bool bSkipTutorial)
 	{
 		Current_Day = Day::Day1;
 		if (!loadMapAtSpawn_(U"town", U"main")) {
+#if defined(DEBUG) || defined(_DEBUG)
 			Console << U"!!!!!!!! MAP LOAD FAILED !!!!!!!!";
+#endif
 		}
 		StartStorySequence(StoryID::Opening1, GameplaySequence::Story);
 	}
@@ -102,7 +106,11 @@ void Game::Update()
 					beginFadeOut_(*req); // start fade-out; switch at the peak
 				}
 
+#if defined(DEBUG) || defined(_DEBUG)
 				if (Exploration_Timer.sF() > 2) // [Debug] 180 sec
+#else
+				if (Exploration_Timer.sF() > 180)
+#endif
 				{
 					Set_Sequence(GameplaySequence::Grow);
 				}
@@ -156,7 +164,9 @@ void Game::Update()
 					}
 					else
 					{
+#if defined(DEBUG) || defined(_DEBUG)
 						Console << U"lose...";
+#endif
 						Is_Game_Finished = true;
 					}
 				}
@@ -212,7 +222,6 @@ void Game::Draw() const
 #else
 		m_fontDebug(U"[ W / A / S / D ] Move").draw(20, 20, ColorF{ 0.9 });
 #endif
-
 		{
 			const int totalSeconds = static_cast<int>(Exploration_Timer.sF());
 			const int minutes = totalSeconds / 60;
@@ -300,7 +309,9 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 	}
 
 	Sequence = nextSequence;
+#if defined(DEBUG) || defined(_DEBUG)
 	Console << U"Debug: Sequence changed from " << FromEnum(Pre_Sequence) << U" to " << FromEnum(Sequence);
+#endif
 
 	switch (Sequence)
 	{
@@ -334,7 +345,9 @@ void Game::Set_Sequence(GameplaySequence nextSequence, Optional<EnemyStats> enem
 			}
 			else
 			{
+#if defined(DEBUG) || defined(_DEBUG)
 				Console << U"Error: Battle sequence started without enemy stats!";
+#endif
 				Set_Sequence(GameplaySequence::Exploration);
 			}
 		}
@@ -400,7 +413,9 @@ void Game::Go_To_Next_Day()
 		else
 		{
 			if (!loadMapAtSpawn_(U"town", U"main")) {
+#if defined(DEBUG) || defined(_DEBUG)
 				Console << U"!!!!!!!! MAP LOAD FAILED ON NEW DAY !!!!!!!!";
+#endif
 			}
 
 			Set_Sequence(GameplaySequence::Exploration);
@@ -502,7 +517,9 @@ void Game::HandleStoryEnd(StoryID finishedStoryID)
 		Current_Day = Day::Day2;
 
 		if (!loadMapAtSpawn_(U"town", U"main")) {
+#if defined(DEBUG) || defined(_DEBUG)
 			Console << U"!!!!!!!! MAP LOAD FAILED ON DAY 2 !!!!!!!!";
+#endif
 		}
 
 		Set_Sequence(GameplaySequence::Exploration);
@@ -559,19 +576,25 @@ bool Game::loadMapAtSpawn_(const String& key, const String& spawn)
 {
 	const auto it = m_mapPaths.find(key);
 	if (it == m_mapPaths.end()) {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[Game] Unknown map key: " << key;
+#endif
 		return false;
 	}
 
 	MapScene newScene;
 	if (!newScene.loadFromTiledJSON(it->second)) {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[Game] loadFromTiledJSON failed: " << it->second;
+#endif
 		return false;
 	}
 
 	if (!newScene.placePlayerAtSpawn(spawn)) {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[Game] Spawn not found: " << spawn << U" in " << key
 			<< U" (fallback to default 256,256)";
+#endif
 		// keep default position
 	}
 
@@ -602,7 +625,9 @@ void Game::applyFadeAndMaybeSwitch_(double dt)
 			{
 				const auto req = *m_nextReq;
 				if (!loadMapAtSpawn_(req.targetMapKey, req.targetSpawn)) {
+#if defined(DEBUG) || defined(_DEBUG)
 					Console << U"[Game] Scene switch failed";
+#endif
 				}
 			}
 			m_nextReq.reset();

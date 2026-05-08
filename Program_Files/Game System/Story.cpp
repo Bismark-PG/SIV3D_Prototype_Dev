@@ -495,7 +495,9 @@ bool Story_Manager::Update()
 					{
 						if (m_nameInputBuffer == m_playerName)
 						{
+#if defined(DEBUG) || defined(_DEBUG)
 							Console << U"Debug : Same name to aido";
+#endif
 							m_showNameWarning = true;
 						}
 						else
@@ -514,7 +516,9 @@ bool Story_Manager::Update()
 					{
 						if (m_nameInputBuffer == m_playerStats.partnerName)
 						{
+#if defined(DEBUG) || defined(_DEBUG)
 							Console << U"Debug : Same name to player";
+#endif
 							m_showNameWarning = true;
 						}
 						else
@@ -533,7 +537,9 @@ bool Story_Manager::Update()
 				}
 				else
 				{
+#if defined(DEBUG) || defined(_DEBUG)
 					Console << U"Debug : 名前は2~8文字でなければなりません";
+#endif
 				}
 			}
 			else if (selectedChar == U"戻")

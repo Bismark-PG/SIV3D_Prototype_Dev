@@ -33,7 +33,9 @@ bool MapScene::loadFromTiledJSON(const FilePath& path)
 
 	// 2) Load collisions (object layer "collision")
 	if (!m_collider.loadCollisionFromTiledJSON(path)) {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[MapScene] No collision or failed to parse collision layer.";
+#endif
 	}
 
 	// 3) Player basic init (fallback if no spawn)
@@ -104,7 +106,9 @@ bool MapScene::loadFromTiledJSON(const FilePath& path)
 			parseSpawnsAndPortalsFromJSON_(json);
 		}
 		else {
+#if defined(DEBUG) || defined(_DEBUG)
 			Console << U"[MapScene] JSON reload failed for spawn/portal: " << path;
+#endif
 		}
 	}
 
@@ -194,14 +198,17 @@ void MapScene::parseSpawnsAndPortalsFromJSON_(const JSON& json)
 				}
 				else
 				{
+#if defined(DEBUG) || defined(_DEBUG)
 					Console << U"[MapScene] Portal missing target_map/target_spawn - skipped";
+#endif
 				}
 			}
 		}
 	}
-
+#if defined(DEBUG) || defined(_DEBUG)
 	Console << U"[MapScene] spawns=" << m_spawns.size()
 		<< U", portals=" << m_portals.size();
+#endif
 }
 
 void MapScene::spawnEnemiesOnLoad_(int count, MapEnemyKind kind, double minSpawnDist)
@@ -236,7 +243,9 @@ void MapScene::spawnEnemiesOnLoad_(int count, MapEnemyKind kind, double minSpawn
 
 	if (spawned < count)
 	{
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"Warning: Could only spawn {}/{} enemies after {} attempts."_fmt(spawned, count, attempts);
+#endif
 	}
 }
 
@@ -363,11 +372,15 @@ s3d::Optional<EnemyStats> MapScene::checkBattleTrigger()
 
 		const MapEnemyType* type = m_enemyTypes.get(kind);
 		if (!type) {
+#if defined(DEBUG) || defined(_DEBUG)
 			Console << U"Error: Battle triggered but kind {} not in DB!"_fmt((int)kind);
+#endif
 			m_triggeredEnemyID = MapEnemySystem::InvalidEnemyID;
 			return none;
 		}
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[Battle] trigger with " << type->name << U" (ID: " << m_triggeredEnemyID << U")";
+#endif
 
 		EnemyStats stats;
 		stats.name = type->name;
@@ -386,12 +399,16 @@ s3d::Optional<EnemyStats> MapScene::checkBattleTrigger()
 void MapScene::removeTriggeredEnemy()
 {
 	if (m_triggeredEnemyID != MapEnemySystem::InvalidEnemyID) {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"[MapScene] Request removal of enemy ID: " << m_triggeredEnemyID;
+#endif
 		m_enemies.removeEnemyByID(m_triggeredEnemyID);
 		m_triggeredEnemyID = MapEnemySystem::InvalidEnemyID;
 	}
 	else {
+#if defined(DEBUG) || defined(_DEBUG)
 		Console << U"Warning: removeTriggeredEnemy called with invalid ID.";
+#endif
 	}
 }
 

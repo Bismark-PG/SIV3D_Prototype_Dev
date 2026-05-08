@@ -57,6 +57,8 @@ public:
 
 	bool isBattleEnded() const;
 	bool isPlayerWinner() const;
+
+	bool WasPlayerWinner() const;
 };
 
 
