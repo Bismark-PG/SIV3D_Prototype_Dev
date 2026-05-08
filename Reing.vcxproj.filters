@@ -168,80 +168,80 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Program_Files\Game System\Game_Manager.cpp">
+      <Filter>Source Files\Game System</Filter>
     </ClCompile>
-    <ClCompile Include="Resource_Texture.cpp">
+    <ClCompile Include="Program_Files\Game System\Game_Resource_Manager.cpp">
+      <Filter>Source Files\Game System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Game System\Grow_Manager.cpp">
+      <Filter>Source Files\Game System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Game System\Story.cpp">
+      <Filter>Source Files\Game System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Battle\Battle_Manager.cpp">
+      <Filter>Source Files\Battle</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Battle\BattleAnim.cpp">
+      <Filter>Source Files\Battle</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Battle\BattleSystem.cpp">
+      <Filter>Source Files\Battle</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Battle\Character.cpp">
+      <Filter>Source Files\Battle</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Battle\Enemy.cpp">
+      <Filter>Source Files\Battle</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Battle\Player.cpp">
+      <Filter>Source Files\Battle</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapBackground.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapCamera.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapCollider.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapDoor.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapEnemy.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapEnemyNavi.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapEnemyRegister.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapEnemySystem.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapInteractiveSystem.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapPlayer.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Map System\MapScene.cpp">
+      <Filter>Source Files\Map System</Filter>
+    </ClCompile>
+    <ClCompile Include="Program_Files\Programe System\Resource_Audio.cpp">
       <Filter>Source Files\Programe System</Filter>
     </ClCompile>
-    <ClCompile Include="Resource_Audio.cpp">
+    <ClCompile Include="Program_Files\Programe System\Resource_Texture.cpp">
       <Filter>Source Files\Programe System</Filter>
     </ClCompile>
-    <ClCompile Include="Game_Resource_Manager.cpp">
-      <Filter>Source Files\Game System</Filter>
-    </ClCompile>
-    <ClCompile Include="Game_Manager.cpp">
-      <Filter>Source Files\Game System</Filter>
-    </ClCompile>
-    <ClCompile Include="Grow_Manager.cpp">
-      <Filter>Source Files\Game System</Filter>
-    </ClCompile>
-    <ClCompile Include="Enemy.cpp">
-      <Filter>Source Files\Game System</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="Program_Files\Tools\stdafx.cpp">
       <Filter>Source Files\Tools</Filter>
     </ClCompile>
-    <ClCompile Include="MapBackground.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="MapCamera.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="MapCollider.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="MapEnemy.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="MapEnemyNavi.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="MapEnemyRegister.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="MapEnemySystem.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="MapPlayer.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="MapScene.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Source Files\Battle</Filter>
-    </ClCompile>
-    <ClCompile Include="Character.cpp">
-      <Filter>Source Files\Battle</Filter>
-    </ClCompile>
-    <ClCompile Include="BattleSystem.cpp">
-      <Filter>Source Files\Battle</Filter>
-    </ClCompile>
-    <ClCompile Include="Battle_Manager.cpp">
-      <Filter>Source Files\Battle</Filter>
-    </ClCompile>
-    <ClCompile Include="MapDoor.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="MapInteractiveSystem.cpp">
-      <Filter>Source Files\Map System</Filter>
-    </ClCompile>
-    <ClCompile Include="BattleAnim.cpp">
-      <Filter>Source Files\Battle</Filter>
-    </ClCompile>
-    <ClCompile Include="Story.cpp">
-      <Filter>Source Files\Game System</Filter>
+    <ClCompile Include="Program_Files\Main.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -905,80 +905,80 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Game_Manager.h">
+    <ClInclude Include="Program_Files\Battle\Battle_Manager.h">
+      <Filter>Header Files\Battle</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Battle\BattleAnim.h">
+      <Filter>Header Files\Battle</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Battle\BattleSystem.h">
+      <Filter>Header Files\Battle</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Battle\Character.h">
+      <Filter>Header Files\Battle</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Battle\Enemy.h">
+      <Filter>Header Files\Battle</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Battle\Player.h">
+      <Filter>Header Files\Battle</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Game System\Game_Manager.h">
       <Filter>Header Files\Game System</Filter>
     </ClInclude>
-    <ClInclude Include="Grow_Manager.h">
+    <ClInclude Include="Program_Files\Game System\Game_Resource_Manager.h">
       <Filter>Header Files\Game System</Filter>
     </ClInclude>
-    <ClInclude Include="In_Game_Enum.h">
-      <Filter>Header Files\Tools</Filter>
+    <ClInclude Include="Program_Files\Game System\Grow_Manager.h">
+      <Filter>Header Files\Game System</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files\Tools</Filter>
+    <ClInclude Include="Program_Files\Game System\Story.h">
+      <Filter>Header Files\Game System</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
+    <ClInclude Include="Program_Files\Map System\MapBackground.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapCamera.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapCollider.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapDoor.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapEnemy.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapEnemyNavi.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapEnemySystem.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapEnemyType.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapInteractiveObject.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapInteractiveSystem.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapPlayer.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Map System\MapScene.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="Program_Files\Programe System\Resource.h">
       <Filter>Header Files\Programe System</Filter>
     </ClInclude>
-    <ClInclude Include="Game_Resource_Manager.h">
-      <Filter>Header Files\Game System</Filter>
+    <ClInclude Include="Program_Files\Tools\In_Game_Enum.h">
+      <Filter>Header Files\Tools</Filter>
     </ClInclude>
-    <ClInclude Include="MapBackground.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="MapCamera.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="MapCollider.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="MapEnemy.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="MapEnemyNavi.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="MapEnemySystem.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="MapEnemyType.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="MapPlayer.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="MapScene.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Header Files\Battle</Filter>
-    </ClInclude>
-    <ClInclude Include="Character.h">
-      <Filter>Header Files\Battle</Filter>
-    </ClInclude>
-    <ClInclude Include="Enemy.h">
-      <Filter>Header Files\Battle</Filter>
-    </ClInclude>
-    <ClInclude Include="BattleSystem.h">
-      <Filter>Header Files\Battle</Filter>
-    </ClInclude>
-    <ClInclude Include="Battle_Manager.h">
-      <Filter>Header Files\Battle</Filter>
-    </ClInclude>
-    <ClInclude Include="MapInteractiveObject.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="MapInteractiveSystem.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="MapDoor.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="Story.h">
-      <Filter>Header Files\Game System</Filter>
-    </ClInclude>
-    <ClInclude Include="BattleAnim.h">
-      <Filter>Header Files\Battle</Filter>
+    <ClInclude Include="Program_Files\Tools\stdafx.h">
+      <Filter>Header Files\Tools</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

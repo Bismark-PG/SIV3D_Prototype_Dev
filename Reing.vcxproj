@@ -75,6 +75,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <ForcedIncludeFiles>stdafx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <BuildStlModules>false</BuildStlModules>
+      <AdditionalIncludeDirectories>$(ProjectDir)Program_Files\Tools;$(ProjectDir)Program_Files\Programe_System;$(ProjectDir)Program_Files\Map_System;$(ProjectDir)Program_Files\Game_System;$(ProjectDir)Program_Files\Battle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -102,6 +103,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <ForcedIncludeFiles>stdafx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <BuildStlModules>false</BuildStlModules>
+      <AdditionalIncludeDirectories>$(ProjectDir)Program_Files\Tools;$(ProjectDir)Program_Files\Programe_System;$(ProjectDir)Program_Files\Map_System;$(ProjectDir)Program_Files\Game_System;$(ProjectDir)Program_Files\Battle;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -115,34 +117,31 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BattleAnim.cpp" />
-    <ClCompile Include="BattleSystem.cpp" />
-    <ClCompile Include="Battle_Manager.cpp" />
-    <ClCompile Include="Character.cpp" />
-    <ClCompile Include="Enemy.cpp" />
-    <ClCompile Include="Game_Resource_Manager.cpp" />
-    <ClCompile Include="Game_Manager.cpp" />
-    <ClCompile Include="Grow_Manager.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="MapBackground.cpp" />
-    <ClCompile Include="MapCamera.cpp" />
-    <ClCompile Include="MapCollider.cpp" />
-    <ClCompile Include="MapDoor.cpp" />
-    <ClCompile Include="MapEnemy.cpp" />
-    <ClCompile Include="MapEnemyNavi.cpp" />
-    <ClCompile Include="MapEnemyRegister.cpp" />
-    <ClCompile Include="MapEnemySystem.cpp" />
-    <ClCompile Include="MapInteractiveSystem.cpp" />
-    <ClCompile Include="MapPlayer.cpp" />
-    <ClCompile Include="MapScene.cpp" />
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="Resource_Audio.cpp" />
-    <ClCompile Include="Resource_Texture.cpp" />
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Story.cpp" />
+    <ClCompile Include="Program_Files\Battle\BattleAnim.cpp" />
+    <ClCompile Include="Program_Files\Battle\BattleSystem.cpp" />
+    <ClCompile Include="Program_Files\Battle\Battle_Manager.cpp" />
+    <ClCompile Include="Program_Files\Battle\Character.cpp" />
+    <ClCompile Include="Program_Files\Battle\Enemy.cpp" />
+    <ClCompile Include="Program_Files\Battle\Player.cpp" />
+    <ClCompile Include="Program_Files\Game System\Game_Manager.cpp" />
+    <ClCompile Include="Program_Files\Game System\Game_Resource_Manager.cpp" />
+    <ClCompile Include="Program_Files\Game System\Grow_Manager.cpp" />
+    <ClCompile Include="Program_Files\Game System\Story.cpp" />
+    <ClCompile Include="Program_Files\Main.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapBackground.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapCamera.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapCollider.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapDoor.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapEnemy.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapEnemyNavi.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapEnemyRegister.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapEnemySystem.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapInteractiveSystem.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapPlayer.cpp" />
+    <ClCompile Include="Program_Files\Map System\MapScene.cpp" />
+    <ClCompile Include="Program_Files\Programe System\Resource_Audio.cpp" />
+    <ClCompile Include="Program_Files\Programe System\Resource_Texture.cpp" />
+    <ClCompile Include="Program_Files\Tools\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="App\engine\texture\box-shadow\128.png" />
@@ -348,31 +347,31 @@
     <Xml Include="App\example\xml\test.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BattleAnim.h" />
-    <ClInclude Include="Battle_Manager.h" />
-    <ClInclude Include="BattleSystem.h" />
-    <ClInclude Include="Character.h" />
-    <ClInclude Include="Enemy.h" />
-    <ClInclude Include="Game_Manager.h" />
-    <ClInclude Include="Grow_Manager.h" />
-    <ClInclude Include="In_Game_Enum.h" />
-    <ClInclude Include="MapBackground.h" />
-    <ClInclude Include="MapCamera.h" />
-    <ClInclude Include="MapCollider.h" />
-    <ClInclude Include="MapDoor.h" />
-    <ClInclude Include="MapEnemy.h" />
-    <ClInclude Include="MapEnemyNavi.h" />
-    <ClInclude Include="MapEnemySystem.h" />
-    <ClInclude Include="MapEnemyType.h" />
-    <ClInclude Include="MapInteractiveObject.h" />
-    <ClInclude Include="MapInteractiveSystem.h" />
-    <ClInclude Include="MapPlayer.h" />
-    <ClInclude Include="MapScene.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="Game_Resource_Manager.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="Story.h" />
+    <ClInclude Include="Program_Files\Battle\BattleAnim.h" />
+    <ClInclude Include="Program_Files\Battle\BattleSystem.h" />
+    <ClInclude Include="Program_Files\Battle\Battle_Manager.h" />
+    <ClInclude Include="Program_Files\Battle\Character.h" />
+    <ClInclude Include="Program_Files\Battle\Enemy.h" />
+    <ClInclude Include="Program_Files\Battle\Player.h" />
+    <ClInclude Include="Program_Files\Game System\Game_Manager.h" />
+    <ClInclude Include="Program_Files\Game System\Game_Resource_Manager.h" />
+    <ClInclude Include="Program_Files\Game System\Grow_Manager.h" />
+    <ClInclude Include="Program_Files\Game System\Story.h" />
+    <ClInclude Include="Program_Files\Map System\MapBackground.h" />
+    <ClInclude Include="Program_Files\Map System\MapCamera.h" />
+    <ClInclude Include="Program_Files\Map System\MapCollider.h" />
+    <ClInclude Include="Program_Files\Map System\MapDoor.h" />
+    <ClInclude Include="Program_Files\Map System\MapEnemy.h" />
+    <ClInclude Include="Program_Files\Map System\MapEnemyNavi.h" />
+    <ClInclude Include="Program_Files\Map System\MapEnemySystem.h" />
+    <ClInclude Include="Program_Files\Map System\MapEnemyType.h" />
+    <ClInclude Include="Program_Files\Map System\MapInteractiveObject.h" />
+    <ClInclude Include="Program_Files\Map System\MapInteractiveSystem.h" />
+    <ClInclude Include="Program_Files\Map System\MapPlayer.h" />
+    <ClInclude Include="Program_Files\Map System\MapScene.h" />
+    <ClInclude Include="Program_Files\Programe System\Resource.h" />
+    <ClInclude Include="Program_Files\Tools\In_Game_Enum.h" />
+    <ClInclude Include="Program_Files\Tools\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App\example\obj\blacksmith.obj">
